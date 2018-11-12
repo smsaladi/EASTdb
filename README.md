@@ -24,3 +24,9 @@ bash download_data.bash
 python embed_fasta.py uniprot_sprot.fasta.gz ../prune_model/epoch3_pruned.hdf5
 ```
 
+4. Convert model to tfjs format
+
+```shell
+tensorflowjs_converter --input_format=keras epoch3_pruned.hdf5 epoch3_pruned_tfjs
+```
+
