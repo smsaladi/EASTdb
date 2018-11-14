@@ -1,0 +1,26 @@
+<!-- public/views/index.ejs -->
+
+<!-- This file is the index file for our project -->
+<!doctype html>
+<html>
+    <head>
+    	<title>East Frontend</title>
+    </head>
+
+    <body>
+    	<h1>Hello, the app is working correctly!</h1>
+
+    	<div>
+    		<h3>Click on this button to make a call to the server</h3>
+    		<form method="get" action="/get_data">
+			    <button type="submit">Click me!</button>
+			</form>
+
+			<label style="display: inline-block; margin-top: 20px"><%= data %></label>
+
+			<form method="get" action="/">
+			    <button type="submit">Home</button>
+			</form>
+    	</div>
+    </body>
+</html>
