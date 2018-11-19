@@ -27,13 +27,13 @@ def read_sequences(fn):
 
     with op(fn, 'rt') as fh:
         for r in Bio.SeqIO.parse(fh, "fasta"):
-            print("r: ", r)
+            # print("r: ", r)
             _, rec_id, _ = r.id.split('|')
             seq = str(r.seq)
-            print("seq: ", seq)
+            # print("seq: ", seq)
             seq_arr = np.array([input_symbols.get(x, 20) for x in seq])
-            print("rec_id: ", rec_id)
-            print("seq_arr: ", seq_arr)
+            # print("rec_id: ", rec_id)
+            # print("seq_arr: ", seq_arr)
             yield rec_id, seq_arr, seq
 
 
@@ -44,19 +44,30 @@ def grouper(iterable, size=32):
     sourceiter = iter(iterable)
     while True:
         batchiter = islice(sourceiter, size)
-        yield chain([next(batchiter)], batchiter)
+        print("batchiter: ", batchiter)
+        obj = chain([next(batchiter)], batchiter)
+        print("obj:", obj)
+        yield obj
 
 
 def infer_batches(seqiter, model):
-    print("got here")
+    all_ids = []
+    all_seq_arr = []
+    all_preds = []
     for grp in grouper(seqiter):
-        print("grp: ", grp)
-        print(zip(*grp))
+        # print("grp: ", *grp)
         ids, seq_arr, seqs = zip(*grp)
+        '''
         seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post")
         seq_arr = to_categorical(seq_arr, num_classes=21)
         preds = model.predict_on_batch(seq_arr)
-        yield ids, seqs, preds
+        all_ids.append(ids)
+        all_seq_arr.append(seq_arr)
+        all_preds.append(preds)
+    print("all_ids: ", all_ids)
+    print("all_seq_arr: ", all_seq_arr)
+    print("all_preds: ", all_preds)
+        # yield ids, seqs, preds'''
 
 
 def write_to_db(batch):

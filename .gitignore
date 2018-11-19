@@ -1,0 +1,2 @@
+# Ignore hdf5 files because they are too large
+*.hdf5
