@@ -7,6 +7,7 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^0.13.5",
     "ejs": "^2.6.1",
     "express": "^4.16.4"
   },
