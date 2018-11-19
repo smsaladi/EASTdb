@@ -44,30 +44,20 @@ def grouper(iterable, size=32):
     sourceiter = iter(iterable)
     while True:
         batchiter = islice(sourceiter, size)
-        print("batchiter: ", batchiter)
-        obj = chain([next(batchiter)], batchiter)
-        print("obj:", obj)
-        yield obj
+        yield chain([next(batchiter)], batchiter)
+
 
 
 def infer_batches(seqiter, model):
-    all_ids = []
-    all_seq_arr = []
-    all_preds = []
     for grp in grouper(seqiter):
-        # print("grp: ", *grp)
         ids, seq_arr, seqs = zip(*grp)
-        '''
+        print("ids", ids)
         seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post")
         seq_arr = to_categorical(seq_arr, num_classes=21)
+        print("seq_arr", seq_arr)
         preds = model.predict_on_batch(seq_arr)
-        all_ids.append(ids)
-        all_seq_arr.append(seq_arr)
-        all_preds.append(preds)
-    print("all_ids: ", all_ids)
-    print("all_seq_arr: ", all_seq_arr)
-    print("all_preds: ", all_preds)
-        # yield ids, seqs, preds'''
+        print("preds", preds)
+        yield ids, seqs, preds
 
 
 def write_to_db(batch):
@@ -79,10 +69,10 @@ def main():
     model = load_model("epoch3_pruned.hdf5")
 
     batches = infer_batches(seqiter, model)
+    print("enumerating batches")
 
     for i, b in enumerate(batches):
         print(i, b[2])
-
     return
     
 
