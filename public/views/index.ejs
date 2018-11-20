@@ -32,6 +32,7 @@
 			href="https://use.fontawesome.com/releases/v5.1.0/css/all.css"
 			integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
 			crossorigin="anonymous">
+		<link rel="stylesheet" href="/static/style.css">
 
 		<title>East Frontend</title>
     </head>
@@ -108,8 +109,8 @@
 				<input type="email" class="form-control" id="emailInput" placeholder="username@university.edu">
 			</div>
 			<div class="form-group">
-				<label for="sequenceInput">Input protein sequence(s) (plain text or FASTA-formatted, if multiple)</label>
-				<textarea class="form-control" id="sequenceInput" rows="3"></textarea>
+				<label for="sequenceTextInput">Input protein sequence(s) (plain text or FASTA-formatted, if multiple)</label>
+				<textarea class="form-control" id="sequenceTextInput" rows="10"></textarea>
 			</div>
 			<div class="form-row">
 				<div class="col">
@@ -142,8 +143,8 @@
 					</div>
 				</div>
 			</div>
-			<button type="submit" class="btn btn-primary"><i class="fas fa-wrench"></i> Submit</button>
-			<button type="button" class="btn btn-secondary">Sample data</button>
+			<button type="submit" class="btn btn-primary" id="runQueryButton"><i class="fas fa-wrench"></i> Run query</button>
+			<button type="button" class="btn btn-secondary" id="sampleDataButton">Sample data</button>
 			<button type="button" class="btn btn-secondary">Reset fields</button>
 		</form>
 		
@@ -155,7 +156,7 @@
 
 		<label style="display: inline-block; margin-top: 20px"><%= data %></label>
 
-		</div></div>
+		</div id="output"></div>
 
 		</div>
 
@@ -171,5 +172,9 @@
 		integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
 		crossorigin="anonymous"></script>
 	<script src="/static/utils.js"></script>
+
+	<!-- tfjs and embedding code-->
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"> </script>
+	<script src="/static/compute.js"></script>
   </body>
 </html>
