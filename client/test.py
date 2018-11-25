@@ -30,9 +30,9 @@ def read_sequences(fn):
             # print("r: ", r)
             _, rec_id, _ = r.id.split('|')
             seq = str(r.seq)
-            # print("seq: ", seq)
+            print("rec_id: ", rec_id)
             seq_arr = np.array([input_symbols.get(x, 20) for x in seq])
-            # print("rec_id: ", rec_id)
+            print("seq: ", seq)
             # print("seq_arr: ", seq_arr)
             yield rec_id, seq_arr, seq
 

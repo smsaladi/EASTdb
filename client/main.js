@@ -3,13 +3,9 @@ Reads in a FASTA file and provides the embedding for each sequence
 JavaScript
 */
 
-// import * as loader from './loader';
-// import * as ui from './ui';
-
-
 
 const IUPAC_CODES =  Array.from('ACDEFGHIKLMNPQRSTVWY*');
-TEST_STR = "MALSYRTPTEYLINQLPARLTDNIAVKQVDLIQSDEDCYGSYLNYNLSKEQKKFLVDKGLYLSPYSWRHHSHPACKTIENWLLYKEIGSYAKHVSKQQTIAFISLREGKLNAIKKIHFEKKNNKVACEKICSFNRYYHTKDRLRYSDSSGREIIYKSFDKIGDQIGPRASFYIHDECHYWSPNDLSNFLSRTKAESILATVIHPTEIDVGKDCSHLPFLYEFEVSDNNIFFFPDGNRSEGYEQPKTAGWWLKMRRFYSDGEVYSVTLLRTIGPFHLIYISRGSLASESRRFFDDFNILDLPVKYAKNNLIKKMKLLLRNNFMIKIVSYIKSLKKPDKESAIAKLRMLSEDEFSLEEMIFVDGLVDTLLKNGYKSIWENGWVEWFICGLKDCLPDALHSAMFRSHFKAKQNLDLLMNMKTLSIVVETEDFYPYSKVDCIKEIKEYFLNSCDYLQRDNIDKIIRSSFRGEYIYDYDTSGYYSIRTTSGKMELHGPDSRHLMRSAHDCISYEANIKLFGNNHMEKMRIENRFWFLNDEKRFENAKRESISRCKTIFDEYDAILEEELPDDSIFKGFNKGVSFFKKKTMRMNECLIMLRTGVYNKSKLISNIKHVDDPFSTMEKHKRDRLNKVIKYYIGGVEYEMPSSQVSELEEITEITPINRLSSSNPMDEKTFRNLANKCCFDCIMEIKKIDHVALVNYITETKFMDLLLKDNGLLQKELIELCNFLNIKVNIINQSGTRLIYENDNDNTLILTERHCKLVKTESISDWLLDDNKDFLDVTGVSSIIKNVFDYKRSKKLYDSLSKGTSGVFFNMIKKKNDESEKKKDKNRVIEMMNFFFEDEINEKRKLTGRSEPIYGFFGFAGSGKSREIQNYINTNYNMDGCVTVVSPRVELLKDWEKKISVANKKIRFSTYEKALTLSYYEDELVVVDEIGLLPPGYISLLSLVTAFRVNKISHNIRLSKRNYSKYVENQSSRLVLLGDHLQGRYYNESDFRSLSQPDEIDFIMMNEEILYLNYSHRLNKMHFYKPGVEMLGEDENIISRRFSNVFSAKKTIPEAQLLVASRDEQVRFKELDAKTFGESQGLTFDEIIIVLSPPAVNCSINMWNVAMTRARKGVHFALNGFDTVDDFINRVKGTPVNAMILGSPFEIHRTPGGKDKEIKIIKVCRLGMSNEDVEMKLMGDPFLKSIIPSLDEGLSIEQEYHDIICESPVPKIHLPIESIQGHVSYVSSMLKERGEREFKGDGCMSEQFPDFWKTGEPGHYLSQSERFQSIFPKHQNSDSLTFLAAVKKRLKFSSPSVERERFEKVRHLGNEMLDIFLDKIKIDNKLNSEMMARSYNEYVLKKVSKTANTIASHSSRSEPDWKLNEIFLFMKTQLCTKFEKRFSDAKAGQTLACFSHIILNRFAAPTRYVEKKISEGLGKNFYIHQKKNFDVLNDWVVANNFDSYCLESDYEAFDSSQDCLILAFEYELLKYLGWDQSLLDDYLDLKFNLGCRLGNLAVMRFTGEFGTFLFNTLANMVFTFMTYDLNGTESICFAGDDMCCNRGIKARVDGKYDHILKRLTLKAKAVITKEPTFCGWRLTKYGIFKKPELVLERFLIAIEKGRLLDVIDSYYIECSYAYNLGERLFECFSEKDFSAHYCCIRIVHKNKSLLKGLSLERYRENRRFKHSCKSWIQRPSYRSSTMEDETLIASGSVRCTQMGVSSKTRRLTQFREQKVQFQLNQLMGSPGLLKEYLLLTQMLLMRRETRRSIQKSILEQLSSVSTSLVIMNVRCQEEDVCWLTVEEVEEVELSKPLSLIYPKDQPTSCSYQMQSLTFMMSYLTGPVKCSSSLTMLITVVVPTHLLLRLGQYIACLMSSIAITEWEFQEERVPLEVSIRKYIALRPYQRKMRSQCCQRCVSQERLEEYLMLREALALNLKGVREVLSCLGEKEALLSFEIIVSEKGLVKLRKIYAGLGQAQEVLMKETFLKRFWIINLGLPVNAENFKVTSGKQAMVDQAANLALSNWINETTGFQGEAYGVRLRKLRRRTLLRQHWVSVFKEYVKNLGHANTPAEFTAAESEIYGRVMSDFAAYAFGIMAEEGFSPATIYNEVPASYTIEYPQPVGALNVSFSPAEVSRQFKYYANSSGNSCFANITWRQIGESFAEDIVRYFKELQVDAQSWLVRSNPVLAGNAPWVALDVTDGLDVRRLNPEEKKVIARAKNHLLKSMQLKGRESLSAEALLES"
+TEST_STR = "MQVVDPKAFIQKFDNGGRNIDCIRVSEVYSDGGFIKNEKVDAVQRTESSISIKSINGESRIIKGIPIIDPNVIDEERNKKKYSKVNIGAIIISIHKLGYYEREMSRGRCLLVDGRRSGGGGIIKAFEFDISKGPAHFVLVPNAVFDIHDELLDRACEVFIIFDNVNYRGGSYPFAIEIGAIYRMSNVFNCYHRMGVPGRKGSIGSIYQEVHCTKTISEEDEESVLSEMCVAREAGRISDAERSFGFESERGKRSLIMPWRKRGPSFFRDYSVGEGSSETEENLCRVRSSTGSIDERDIPEKVLDNKFRSASERRKLQSNFREASHGRSSCKPRSVKLDKRDDRVPGGSLWREVEEIEEEDITEAALGECFQGVREKLRAREHPSGVHGC"
 
 
 var input_symbols = {};
@@ -22,13 +18,6 @@ IUPAC_CODES.forEach(function (i) {
 });
 
 
-
-// load model
-async function loadModel(){
-    const model = await tf.loadModel('https://www.its.caltech.edu/~saladi/epoch3_pruned_tfjs/model.json');
-    // model.summary();
-}
-
 // Upload FASTA file
 const fastaFile = document.getElementById('fasta-file')
 
@@ -40,8 +29,33 @@ fastaFile.addEventListener('change', evt => {
     // Closure to capture the file information.
     reader.onload = function(event){
         var contents = event.target.result;
-        var lines = contents.split('\n');
-        status(lines);
+        fasta = contents.trim();
+
+        // split on newlines... 
+        var sequences = fasta.split('\n>');
+        sequences[0] = sequences[0].replace('>', '');
+        // get ID from first line
+        // ID: tr|K4PEV9|K4PEV9_9VIRU
+        // rec_ids = [K4PEV9, K4PEV9_9VIRU]
+        var seq1_data = sequences[0].split('\n');
+        var l1_data = seq1_data[0].split(' ');
+        var rec_ids = l1_data[0].split('|').slice(1,);
+        var seq1_id = rec_ids[0];
+        var seq1_str = seq1_data.slice(1,).join('').trim();
+        status(seq1_str);
+        //infer_batches(seq1_str);
+
+        for (var j = 1, seq; seq = sequences[j]; j++){
+            var lines = sequences[j].split('\n');
+            // join the remaining lines back into a single string without newlines and 
+            // trailing or leading spaces
+            var seq_str = lines.slice(1,).join('').trim();
+            if (!seq_str){
+                return false;
+            }
+            // status(seq_str);
+            var seq_id = rec_ids[j];
+        }
 
     };
     reader.readAsText(f, "UTF-8");
@@ -60,11 +74,12 @@ function read_sequences(seq_arr){
     }
     // convert js arary to tensor
     var x = tf.tensor1d(seq_arr, 'int32')
-    const num_zeros = 3000 - n;
-    // pad to size [1, 3000]
+    const num_zeros = 2000 - n;
+    // pad to size [1, 2000]
     x = x.pad([[0, num_zeros]]);
     // one hot encode using map defined above
     x = tf.oneHot(x, 21);
+    x = x.reshape([1, 2000, 21]);
     // x.print(verbose=true);
     status(x);
     return x;
@@ -97,25 +112,66 @@ function* grouper(TEST_STR, size=32){
 }
 
 
-function * infer_batches(sequence_str){
+async function infer_batches(sequence_str){
+    // load model
+    const model = await tf.loadModel('https://www.its.caltech.edu/~saladi/epoch3_pruned_tfjs/model.json');
+    // model.summary();
     for (const x of grouper(sequence_str)){
+        //console.log(x);
         const seq_arr = read_sequences(x);
-
         // seq_arr.print(verbose=true);
-        var pred = model.predict(seq_arr);
-        // model.predict(seq_arr).print();
+        const pred = model.predictOnBatch(seq_arr);
+        // model.predictOnBatch(seq_arr).print();
+        // console.log(pred);
         yield pred;
+
     }
 }
 
+const url = 'http://127.0.0.1:5000/get_nums';
 
+var params = {
+    numbers: [1, 2, 3] 
+};
+
+function buildUrl(url, parameters){
+  var qs = "";
+  for(var key in parameters) {
+    var value = parameters[key];
+    qs += encodeURIComponent(key) + "=" + encodeURIComponent(value) + "&";
+  }
+  if (qs.length > 0){
+    qs = qs.substring(0, qs.length-1); //chop off last "&"
+    url = url + "?" + qs;
+  }
+  return url;
+}
+
+const request_url =  buildUrl(url, params);
+// console.log(request_url);
+
+fetch(request_url)
+  .then(
+    function(response) {
+      if (response.status !== 200) {
+        console.log('Looks like there was a problem. Status Code: ' +
+          response.status);
+        return;
+      }
+      // Examine the text in the response
+      response.json().then(function(data) {
+        console.log(data);
+      });
+    }
+  )
+  .catch(function(err) {
+    console.log('Fetch Error :-S', err);
+  });
 
 const outputStatusElement = document.getElementById('status');
 const status = msg => outputStatusElement.innerText = msg;
 
-loadModel();
-//infer_batches(TEST_STR);
-
+infer_batches(TEST_STR);
 
 
 
