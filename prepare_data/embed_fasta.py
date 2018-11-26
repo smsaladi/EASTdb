@@ -15,6 +15,12 @@ from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
+from sqlalchemy import create_engine
+import pandas as pd
+import numpy as np
+
+
+
 IUPAC_CODES = list('ACDEFGHIKLMNPQRSTVWY*')
 input_symbols = {label: i for i, label in enumerate(IUPAC_CODES)}
 
@@ -39,7 +45,11 @@ def grouper(iterable, size=32):
     sourceiter = iter(iterable)
     while True:
         batchiter = islice(sourceiter, size)
-        yield chain([next(batchiter)], batchiter)
+        try:
+            yield chain([next(batchiter)], batchiter)
+        except StopIteration:
+            return
+
 
 
 def infer_batches(seqiter, model):
@@ -48,12 +58,58 @@ def infer_batches(seqiter, model):
         seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post")
         seq_arr = to_categorical(seq_arr, num_classes=21)
         preds = model.predict_on_batch(seq_arr)
-        yield ids, seqs, preds
+        try:
+            yield ids, seqs, preds
+        except StopIteration:
+            return
 
 
-def write_to_db(batch):
-    pass
+def write_to_db(batches):
+    ids_list = []
+    seqs_list = []
+    preds_eightdim_list = []
+    preds_threedim_list = []
+    
+    # run the generators and get the data
+    for i, b in enumerate(batches):
+        ids, seqs, preds = b[0], b[1], b[2]
+        ids_list.extend(ids)
+        seqs_list.extend(seqs)
+        preds_eightdim_list.extend(preds[0])
+        preds_threedim_list.extend(preds[1])
+    
+    # split up preds from the lists of eight and three
+    eight_names = ['preds_eightdim_' + str(i) for i in range(8)]
+    three_names = ['preds_threedim_' + str(i) for i in range(3)]
+    column_names = ['ids','seqs']
+    
+    # convert everything to pandas
+    column_names.extend(eight_names)
+    column_names.extend(three_names)
+    df = pd.DataFrame(columns=column_names)
+    for i in range(len(ids_list)):
+        preds_eight = preds_eightdim_list[i]
+        preds_three = preds_threedim_list[i]
+        df.loc[i] = (ids_list[i], seqs_list[i], 
+                    preds_eight[0],
+                    preds_eight[1],
+                    preds_eight[2],
+                    preds_eight[3],
+                    preds_eight[4],
+                    preds_eight[5],
+                    preds_eight[6],
+                    preds_eight[7],
+                    preds_three[0],
+                    preds_three[1],
+                    preds_three[2])
+    
+    # write to test.csv
+    df.to_csv("test.csv", index=False)
 
+    # make database
+    # dialect+driver://username:password@host:port/database
+    engine = create_engine("postgresql://postgres:pgpass@131.215.26.148:2222/testdb")
+    df.to_sql('test_data', con=engine)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -65,8 +121,9 @@ def main():
     seqiter = read_sequences(args.fasta_fn)
     model = load_model(args.model)
     batches = infer_batches(seqiter, model)
-    for i, b in enumerate(batches):
-        print(i, b[2])
+#     for i, b in enumerate(batches):
+#         print(i, b[2])
+    write_to_db(batches)
 
     return
 
