@@ -108,7 +108,7 @@ def write_to_db(batches):
 
     # make database
     # dialect+driver://username:password@host:port/database
-    engine = create_engine("postgresql://postgres:pgpass@131.215.26.148:2222/testdb")
+    engine = create_engine("postgresql://postgres:pgpass@localhost:5432/testdb")
     df.to_sql('test_data', con=engine)
 
 def main():
