@@ -15,7 +15,7 @@ from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import pandas as pd
 import numpy as np
 
@@ -64,7 +64,7 @@ def infer_batches(seqiter, model):
             return
 
 
-def write_to_db(ids, seqs, preds):
+def write_to_db(ids, seqs, preds, con):
     """Writes a single batch of data into the database
     """
     
@@ -85,14 +85,24 @@ def write_to_db(ids, seqs, preds):
     # df.to_csv("test.csv", index=False)
     # raise ValueError
 
+    df.to_sql('up_dspace', con=con, if_exists='append', index=False)
+
+    return
+
+
+def setup_db():
     # write to database
     # dialect+driver://username:password@host:port/database
     # change testdb to eastdb for final version
     engine = create_engine("postgresql://postgres:psqlpass@131.215.26.148:5433/eastdb")
-    df.to_sql('up_dspace', con=engine, if_exists='append', index=False)
+   
+    # drop table, since we only allow writing everythign at once
+    sql = text('DROP TABLE IF EXISTS up_dspace;')
+    result = engine.execute(sql)
+    print(result)
 
-    return
-
+    return engine
+ 
 
 def main():
     parser = argparse.ArgumentParser()
@@ -101,11 +111,14 @@ def main():
 
     args = parser.parse_args()
 
+    engine = setup_db() 
+    
     seqiter = read_sequences(args.fasta_fn)
     model = load_model(args.model)
     batches = infer_batches(seqiter, model)
+
     for b in tqdm(batches):
-        write_to_db(*b)
+        write_to_db(*b, con=engine)
 
     return
 
