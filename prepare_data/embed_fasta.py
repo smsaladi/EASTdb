@@ -103,12 +103,13 @@ def write_to_db(batches):
                     preds_three[1],
                     preds_three[2])
     
-    # write to test.csv
-    df.to_csv("test.csv", index=False)
+    # uncomment to write to test.csv
+    # df.to_csv("test.csv", index=False)
 
     # make database
     # dialect+driver://username:password@host:port/database
-    engine = create_engine("postgresql://postgres:pgpass@localhost:5432/testdb")
+    # change testdb to eastdb for final version
+    engine = create_engine("postgresql://postgres:psqlpass@131.215.26.148:5433/eastdb")
     df.to_sql('test_data', con=engine)
 
 def main():
