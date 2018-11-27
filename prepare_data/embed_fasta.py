@@ -19,7 +19,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
 
-
+from tqdm import tqdm
 
 IUPAC_CODES = list('ACDEFGHIKLMNPQRSTVWY*')
 input_symbols = {label: i for i, label in enumerate(IUPAC_CODES)}
@@ -64,53 +64,35 @@ def infer_batches(seqiter, model):
             return
 
 
-def write_to_db(batches):
-    ids_list = []
-    seqs_list = []
-    preds_eightdim_list = []
-    preds_threedim_list = []
+def write_to_db(ids, seqs, preds):
+    """Writes a single batch of data into the database
+    """
     
-    # run the generators and get the data
-    for i, b in enumerate(batches):
-        ids, seqs, preds = b[0], b[1], b[2]
-        ids_list.extend(ids)
-        seqs_list.extend(seqs)
-        preds_eightdim_list.extend(preds[0])
-        preds_threedim_list.extend(preds[1])
+    preds_3d, preds_8d = preds[1], preds[0]
     
     # split up preds from the lists of eight and three
-    eight_names = ['preds_eightdim_' + str(i) for i in range(8)]
-    three_names = ['preds_threedim_' + str(i) for i in range(3)]
-    column_names = ['ids','seqs']
-    
-    # convert everything to pandas
-    column_names.extend(eight_names)
-    column_names.extend(three_names)
-    df = pd.DataFrame(columns=column_names)
-    for i in range(len(ids_list)):
-        preds_eight = preds_eightdim_list[i]
-        preds_three = preds_threedim_list[i]
-        df.loc[i] = (ids_list[i], seqs_list[i], 
-                    preds_eight[0],
-                    preds_eight[1],
-                    preds_eight[2],
-                    preds_eight[3],
-                    preds_eight[4],
-                    preds_eight[5],
-                    preds_eight[6],
-                    preds_eight[7],
-                    preds_three[0],
-                    preds_three[1],
-                    preds_three[2])
-    
-    # uncomment to write to test.csv
-    # df.to_csv("test.csv", index=False)
+    names_3d = ['preds_3dim_' + str(i) for i in range(3)]
+    names_8d = ['preds_8dim_' + str(i) for i in range(8)]
 
-    # make database
+    # convert everything to pandas
+    df = pd.DataFrame.from_dict({'ids': ids, 'seqs': seqs})
+    df_3d = pd.DataFrame(preds_3d, columns=names_3d)
+    df_8d = pd.DataFrame(preds_8d, columns=names_8d)
+
+    df = pd.concat([df, df_3d, df_8d], axis=1, copy=False)
+    
+    # uncomment to write to test.csv and then stop
+    # df.to_csv("test.csv", index=False)
+    # raise ValueError
+
+    # write to database
     # dialect+driver://username:password@host:port/database
     # change testdb to eastdb for final version
     engine = create_engine("postgresql://postgres:psqlpass@131.215.26.148:5433/eastdb")
-    df.to_sql('test_data', con=engine)
+    df.to_sql('up_dspace', con=engine, if_exists='append', index=False)
+
+    return
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -122,9 +104,8 @@ def main():
     seqiter = read_sequences(args.fasta_fn)
     model = load_model(args.model)
     batches = infer_batches(seqiter, model)
-#     for i, b in enumerate(batches):
-#         print(i, b[2])
-    write_to_db(batches)
+    for b in tqdm(batches):
+        write_to_db(*b)
 
     return
 
