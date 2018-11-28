@@ -22,7 +22,7 @@ import numpy as np
 from tqdm import tqdm
 
 IUPAC_CODES = list('ACDEFGHIKLMNPQRSTVWY*')
-input_symbols = {label: i for i, label in enumerate(IUPAC_CODES)}
+input_symbols = {label: i+1 for i, label in enumerate(IUPAC_CODES)}
 
 def read_sequences(fn):
     if fn.endswith('.gz'):
@@ -55,7 +55,8 @@ def grouper(iterable, size=32):
 def infer_batches(seqiter, model):
     for grp in grouper(seqiter):
         ids, seq_arr, seqs = zip(*grp)
-        seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post")
+        seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post",
+                                value=input_symbols['*'])
         seq_arr = to_categorical(seq_arr, num_classes=21)
         preds = model.predict_on_batch(seq_arr)
         try:
