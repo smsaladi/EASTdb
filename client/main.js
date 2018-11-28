@@ -87,8 +87,8 @@ function read_sequences(seq_arr){
     x = tf.oneHot(x, 21);
     x.print(verbose=true);
     // status(x);
-    x = x.reshape([1, 2000, 21]);
-    // x.print(verbose=true);
+    x = tf.expandDims(x, axis=0);
+    x.print(verbose=true);
     status(x);
     return x;
 }
@@ -123,18 +123,15 @@ function* grouper(TEST_STR, size=32){
 async function infer_batches(sequence_str){
     // load model
     const model = await tf.loadModel('https://www.its.caltech.edu/~saladi/epoch3_pruned_tfjs/model.json');
-    // model.summary();
+    model.summary();
     for (const x of grouper(sequence_str)){
         //console.log(x);
         const seq_arr = read_sequences(x);
         seq_arr.print(verbose=true);
-        const pred = model.predictOnBatch(seq_arr);
-        const pred_str = JSON.stringify(pred);
-        model.predictOnBatch(tf.ones([1, 2000, 21])).print();
-        //model.predict(seq_arr).print();
-        console.log(pred_str);
-        // yield pred;
-
+        // seq_arr.print(verbose=true);
+        const pred = model.predictOnBatch(seq_arr, verbose=true);
+        console.log(await pred[0].data());
+        console.log(await pred[1].data());
     }
 }
 
