@@ -5,7 +5,7 @@ JavaScript
 
 
 const IUPAC_CODES =  Array.from('ACDEFGHIKLMNPQRSTVWY*');
-TEST_STR = "MQVVDPKAFIQKFDNGGRNIDCIRVSEVYSDGGFIKNEKVDAVQRTESSISIKSINGESRIIKGIPIIDPNVIDEERNKKKYSKVNIGAIIISIHKLGYYEREMSRGRCLLVDGRRSGGGGIIKAFEFDISKGPAHFVLVPNAVFDIHDELLDRACEVFIIFDNVNYRGGSYPFAIEIGAIYRMSNVFNCYHRMGVPGRKGSIGSIYQEVHCTKTISEEDEESVLSEMCVAREAGRISDAERSFGFESERGKRSLIMPWRKRGPSFFRDYSVGEGSSETEENLCRVRSSTGSIDERDIPEKVLDNKFRSASERRKLQSNFREASHGRSSCKPRSVKLDKRDDRVPGGSLWREVEEIEEEDITEAALGECFQGVREKLRAREHPSGVHGC"
+TEST_STR = "ACDEFGHIKLMNPQRSTVWY"
 
 
 var input_symbols = {};
@@ -77,11 +77,16 @@ function read_sequences(seq_arr){
     }
     // convert js arary to tensor
     var x = tf.tensor1d(seq_arr, 'int32')
+    x.print(verbose=true);
     const num_zeros = 2000 - n;
     // pad to size [1, 2000]
-    x = x.pad([[0, num_zeros]]);
+    x = x.pad([[0, num_zeros]], 20);
+    x.print(verbose=true);
+    status(x);
     // one hot encode using map defined above
     x = tf.oneHot(x, 21);
+    x.print(verbose=true);
+    // status(x);
     x = x.reshape([1, 2000, 21]);
     // x.print(verbose=true);
     status(x);
@@ -122,10 +127,12 @@ async function infer_batches(sequence_str){
     for (const x of grouper(sequence_str)){
         //console.log(x);
         const seq_arr = read_sequences(x);
-        // seq_arr.print(verbose=true);
+        seq_arr.print(verbose=true);
         const pred = model.predictOnBatch(seq_arr);
-        // model.predictOnBatch(seq_arr).print();
-        console.log(pred);
+        const pred_str = JSON.stringify(pred);
+        model.predictOnBatch(tf.ones([1, 2000, 21])).print();
+        //model.predict(seq_arr).print();
+        console.log(pred_str);
         // yield pred;
 
     }
