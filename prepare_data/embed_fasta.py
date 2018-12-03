@@ -16,6 +16,8 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
 from sqlalchemy import create_engine, text
+# from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
+# from sqlalchemy import inspect
 import pandas as pd
 import numpy as np
 
@@ -96,14 +98,32 @@ def setup_db():
     # dialect+driver://username:password@host:port/database
     # change testdb to eastdb for final version
     engine = create_engine("postgresql://postgres:psqlpass@131.215.26.148:5433/eastdb")
-   
+
     # drop table, since we only allow writing everythign at once
     sql = text('DROP TABLE IF EXISTS up_dspace;')
+    
     result = engine.execute(sql)
+    engine.execute('CREATE TABLE "up_dspace" ('
+               'ids VARCHAR(10),'
+               'seqs TEXT,'
+                'preds_3dim_0 NUMERIC,'
+                'preds_3dim_1 NUMERIC,'
+                'preds_3dim_2 NUMERIC,'
+                'preds_8dim_0 NUMERIC,'
+                'preds_3dim_0 NUMERIC,'
+                'preds_3dim_1 NUMERIC,'
+                'preds_3dim_2 NUMERIC,'
+                'preds_3dim_3 NUMERIC,'
+                'preds_3dim_4 NUMERIC,'
+                'preds_3dim_5 NUMERIC,'
+                'preds_3dim_6 NUMERIC,'
+                'preds_3dim_7 NUMERIC,'
+               ');')
+
     print(result)
 
     return engine
- 
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -120,6 +140,10 @@ def main():
 
     for b in tqdm(batches):
         write_to_db(*b, con=engine)
+    
+    # make our index
+    engine.execute('CREATE INDEX ON up_dspace USING gist(preds_3dim_0, preds_3dim_1, preds_3dim_2);')
+    engine.execute('ANALYZE up_dspace;')
 
     return
 
