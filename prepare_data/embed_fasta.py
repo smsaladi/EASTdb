@@ -2,11 +2,6 @@
 Reads in a FASTA file and provides the embedding for each sequence
 """
 
-import argparse
-import functools
-from itertools import islice, chain
-import gzip
-
 import numpy as np
 
 import Bio.SeqIO
@@ -16,15 +11,13 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
 from sqlalchemy import create_engine, text
-# from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
-# from sqlalchemy import inspect
 import pandas as pd
 import numpy as np
 
 from tqdm import tqdm
 
 IUPAC_CODES = list('ACDEFGHIKLMNPQRSTVWY*')
-input_symbols = {label: i+1 for i, label in enumerate(IUPAC_CODES)}
+input_symbols = {label: i for i, label in enumerate(IUPAC_CODES)}
 
 def read_sequences(fn):
     if fn.endswith('.gz'):
@@ -40,7 +33,7 @@ def read_sequences(fn):
             yield rec_id, seq_arr, seq
 
 
-def grouper(iterable, size=32):
+def grouper(iterable, size=64):
     """Groups an iterable into size
     https://stackoverflow.com/a/8290514/2320823
     """
@@ -51,14 +44,10 @@ def grouper(iterable, size=32):
             yield chain([next(batchiter)], batchiter)
         except StopIteration:
             return
-
-
-
 def infer_batches(seqiter, model):
     for grp in grouper(seqiter):
         ids, seq_arr, seqs = zip(*grp)
-        seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post",
-                                value=input_symbols['*'])
+        seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post")
         seq_arr = to_categorical(seq_arr, num_classes=21)
         preds = model.predict_on_batch(seq_arr)
         try:
@@ -66,13 +55,12 @@ def infer_batches(seqiter, model):
         except StopIteration:
             return
 
-
 def write_to_db(ids, seqs, preds, con):
     """Writes a single batch of data into the database
     """
-    
+
     preds_3d, preds_8d = preds[1], preds[0]
-    
+
     # split up preds from the lists of eight and three
     names_3d = ['preds_3dim_' + str(i) for i in range(3)]
     names_8d = ['preds_8dim_' + str(i) for i in range(8)]
@@ -83,12 +71,11 @@ def write_to_db(ids, seqs, preds, con):
     df_8d = pd.DataFrame(preds_8d, columns=names_8d)
 
     df = pd.concat([df, df_3d, df_8d], axis=1, copy=False)
-    
+
     # uncomment to write to test.csv and then stop
     # df.to_csv("test.csv", index=False)
     # raise ValueError
-
-    df.to_sql('up_dspace', con=con, if_exists='append', index=False)
+	df.to_sql('up_dspace', con=con, if_exists='append', index=False)
 
     return
 
