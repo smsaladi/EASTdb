@@ -110,14 +110,13 @@ def setup_db():
                 'preds_3dim_1 NUMERIC,'
                 'preds_3dim_2 NUMERIC,'
                 'preds_8dim_0 NUMERIC,'
-                'preds_3dim_0 NUMERIC,'
-                'preds_3dim_1 NUMERIC,'
-                'preds_3dim_2 NUMERIC,'
-                'preds_3dim_3 NUMERIC,'
-                'preds_3dim_4 NUMERIC,'
-                'preds_3dim_5 NUMERIC,'
-                'preds_3dim_6 NUMERIC,'
-                'preds_3dim_7 NUMERIC,'
+                'preds_8dim_1 NUMERIC,'
+                'preds_8dim_2 NUMERIC,'
+                'preds_8dim_3 NUMERIC,'
+                'preds_8dim_4 NUMERIC,'
+                'preds_8dim_5 NUMERIC,'
+                'preds_8dim_6 NUMERIC,'
+                'preds_8dim_7 NUMERIC'
                ');')
 
     print(result)
