@@ -47,8 +47,10 @@ function parse_fasta_files(files){
         var rec_ids = l1_data[0].split('|').slice(1,);
         var seq1_id = rec_ids[0];
         var seq1_str = seq1_data.slice(1,).join('').trim();
-        status(seq1_str);
-        //infer_batches(seq1_str);
+        var predicteds = infer_batches(seq1_str);
+        // var text = document.createTextNode(predicteds + "\n");
+        // outputStatusElement.appendChild(text);
+        // status(predicteds);
 
         for (var j = 1, seq; seq = sequences[j]; j++){
             var lines = sequences[j].split('\n');
@@ -58,7 +60,10 @@ function parse_fasta_files(files){
             if (!seq_str){
                 return false;
             }
-            // status(seq_str);
+            var predicteds = infer_batches(seq_str);
+            //status(predicteds);
+            // var text = document.createTextNode(predicteds + "\n");
+            // outputStatusElement.appendChild(text);
             var seq_id = rec_ids[j];
         }
 
@@ -82,14 +87,14 @@ function read_sequences(seq_arr){
     // pad to size [1, 2000]
     x = x.pad([[0, num_zeros]], 20);
     x.print(verbose=true);
-    status(x);
+    // status(x);
     // one hot encode using map defined above
     x = tf.oneHot(x, 21);
     x.print(verbose=true);
     // status(x);
     x = tf.expandDims(x, axis=0);
     x.print(verbose=true);
-    status(x);
+    // status(x);
     return x;
 }
 
@@ -132,14 +137,14 @@ async function infer_batches(sequence_str){
         const pred = model.predictOnBatch(seq_arr, verbose=true);
         console.log(await pred[0].data());
         console.log(await pred[1].data());
+        getPredictions(await pred[1].data())
+        return pred;
+        // return pred[1].data();
     }
 }
 
 const url = 'http://127.0.0.1:5000/get_nums';
 
-var params = {
-    numbers: [1, 2, 3] 
-};
 
 function buildUrl(url, parameters){
   var qs = "";
@@ -154,31 +159,42 @@ function buildUrl(url, parameters){
   return url;
 }
 
-const request_url =  buildUrl(url, params);
+
 // console.log(request_url);
 
-fetch(request_url)
-  .then(
-    function(response) {
-      if (response.status !== 200) {
-        console.log('Looks like there was a problem. Status Code: ' +
-          response.status);
-        return;
-      }
-      // Examine the text in the response
-      response.json().then(function(data) {
-        console.log(data);
+function getPredictions(array){
+    var params = {
+        numbers: array
+    };
+    const request_url =  buildUrl(url, params);
+    fetch(request_url)
+      .then(
+        function(response) {
+          if (response.status !== 200) {
+            console.log('Looks like there was a problem. Status Code: ' +
+              response.status);
+            return;
+          }
+          // Examine the text in the response
+          response.json().then(function(data) {
+            console.log(data);
+            // Print to UI
+            var text = document.createTextNode(JSON.stringify(data) + "\n");
+            outputStatusElement.appendChild(text);
+          });
+        }
+      )
+      .catch(function(err) {
+        console.log('Fetch Error :-S', err);
       });
-    }
-  )
-  .catch(function(err) {
-    console.log('Fetch Error :-S', err);
-  });
+}
 
-const outputStatusElement = document.getElementById('status');
-const status = msg => outputStatusElement.innerText = msg;
 
-infer_batches(TEST_STR);
+// const outputStatusElement = document.getElementById('status');
+// const status = msg => outputStatusElement.innerText = msg;
+var outputStatusElement = document.getElementById("status");
+
+
 
 
 

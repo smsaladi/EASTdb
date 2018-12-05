@@ -13,7 +13,8 @@ def main():
 @app.route("/get_nums")
 def get_nums():
     numbers = request.args.get('numbers')
-    return json.dumps({"message": numbers})
+    print(numbers)
+    return json.dumps({"Predicted results": numbers})
 
 
 if __name__ == "__main__":
