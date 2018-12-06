@@ -1,8 +1,18 @@
 """
 Reads in a FASTA file and provides the embedding for each sequence
+
+For example: 
+python embed_fasta.py --wipe --table test sample.faa ~/Dropbox/Caltech/EAST_bigfiles/epoch3_pruned.hdf5
+
 """
 
+import argparse
+import functools
+from itertools import islice, chain
+import gzip
+
 import numpy as np
+import pandas as pd
 
 import Bio.SeqIO
 
@@ -11,10 +21,9 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
 from sqlalchemy import create_engine, text
-import pandas as pd
-import numpy as np
 
 from tqdm import tqdm
+
 
 IUPAC_CODES = list('ACDEFGHIKLMNPQRSTVWY*')
 input_symbols = {label: i for i, label in enumerate(IUPAC_CODES)}
@@ -55,7 +64,7 @@ def infer_batches(seqiter, model):
         except StopIteration:
             return
 
-def write_to_db(ids, seqs, preds, con):
+def write_to_db(ids, seqs, preds, con, table):
     """Writes a single batch of data into the database
     """
 
@@ -75,37 +84,45 @@ def write_to_db(ids, seqs, preds, con):
     # uncomment to write to test.csv and then stop
     # df.to_csv("test.csv", index=False)
     # raise ValueError
-	df.to_sql('up_dspace', con=con, if_exists='append', index=False)
+    df.to_sql(table, con=con, if_exists='append', index=False)
 
     return
 
 
-def setup_db():
+def setup_db(table, wipe=False):
     # write to database
     # dialect+driver://username:password@host:port/database
     # change testdb to eastdb for final version
     engine = create_engine("postgresql://postgres:psqlpass@131.215.26.148:5433/eastdb")
+     
+    if not wipe:
+        return engine
 
-    # drop table, since we only allow writing everythign at once
-    sql = text('DROP TABLE IF EXISTS up_dspace;')
-    
+    # drop table, since we only allow writing everything at once
+    sql = text('DROP TABLE IF EXISTS {};'.format(table))
     result = engine.execute(sql)
-    engine.execute('CREATE TABLE "up_dspace" ('
-               'ids VARCHAR(10),'
-               'seqs TEXT,'
-                'preds_3dim_0 NUMERIC,'
-                'preds_3dim_1 NUMERIC,'
-                'preds_3dim_2 NUMERIC,'
-                'preds_8dim_0 NUMERIC,'
-                'preds_8dim_1 NUMERIC,'
-                'preds_8dim_2 NUMERIC,'
-                'preds_8dim_3 NUMERIC,'
-                'preds_8dim_4 NUMERIC,'
-                'preds_8dim_5 NUMERIC,'
-                'preds_8dim_6 NUMERIC,'
-                'preds_8dim_7 NUMERIC'
-               ');')
-
+    print(result)
+    
+    sql = text("""
+        CREATE TABLE IF NOT EXISTS {} (
+            ids VARCHAR(10),
+            seqs TEXT,
+            preds_3dim_0 REAL,
+            preds_3dim_1 REAL,
+            preds_3dim_2 REAL,
+            cube_3d CUBE,
+            preds_8dim_0 REAL,
+            preds_8dim_1 REAL,
+            preds_8dim_2 REAL,
+            preds_8dim_3 REAL,
+            preds_8dim_4 REAL,
+            preds_8dim_5 REAL,
+            preds_8dim_6 REAL,
+            preds_8dim_7 REAL,
+            cube_8d CUBE
+        );
+        """.format(table))
+    result = engine.execute(sql)
     print(result)
 
     return engine
@@ -115,21 +132,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("fasta_fn")
     parser.add_argument("model")
+    parser.add_argument("--wipe", action='store_true')
+    parser.add_argument("--table", default='up_dspace')
 
     args = parser.parse_args()
 
-    engine = setup_db() 
+    engine = setup_db(args.table, args.wipe) 
     
     seqiter = read_sequences(args.fasta_fn)
     model = load_model(args.model)
     batches = infer_batches(seqiter, model)
 
     for b in tqdm(batches):
-        write_to_db(*b, con=engine)
+        write_to_db(*b, con=engine, table=args.table)
     
-    # make our index
-    engine.execute('CREATE INDEX ON up_dspace USING gist(preds_3dim_0, preds_3dim_1, preds_3dim_2);')
-    engine.execute('ANALYZE up_dspace;')
+    print("Data inserted, don't forget to create the index!")
 
     return
 
