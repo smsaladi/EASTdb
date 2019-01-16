@@ -4,9 +4,17 @@
 var express = require('express');
 var app = express();
 var path = require('path');
+var bodyParser = require('body-parser')
 
 /* The view engine for this app is ejs, set that here */
 app.set('view engine', 'ejs'); 
+
+/* Allows us to parse the body data as json */
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
+
+app.use(bodyParser.json());
 
 /* Set the default routes file to our routes.js file*/
 var routes = require('./routes')(app)
