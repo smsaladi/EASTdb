@@ -18,31 +18,22 @@ IUPAC_CODES.forEach(function (i) {
 });
 
 
-$("#runQueryButton").click(function(e) {
-    e.preventDefault();
-    // 4 cases
-    console.log("button clicked");
-    var string = $('#sequenceTextInput').val();
-    console.log(string);
-    var fileInput = document.getElementById('sequenceFileInput');
-    //var myFile = $('#sequenceFileInput').prop('files');
-    if (fileInput.files[0]){
-        console.log("File was uploaded");
-        parse_fasta_files(fileInput.files);
-    } 
-    if (string.length > 0){
-        console.log("Parsing fasta string");
-        parse_fasta_str(string);
-    }
-})
+// Upload FASTA file
+const fastaFile = document.getElementById('fasta-file')
+
+fastaFile.addEventListener('change', evt => {
+  var files = evt.target.files;
+  parse_fasta_files(files);
+  
+});
 
 // Parse fasta file contents 
 function parse_fasta_files(files){
     for (var i = 0, f; f = files[i]; i++) {
-      var fileReader = new FileReader();
-      // Closure to capture the file information.
-      reader.onload = function(){
-        var contents = fileReader.result;
+    var reader = new FileReader();
+    // Closure to capture the file information.
+    reader.onload = function(event){
+        var contents = event.target.result;
         fasta = contents.trim();
 
         // split on newlines... 
@@ -57,6 +48,9 @@ function parse_fasta_files(files){
         var seq1_id = rec_ids[0];
         var seq1_str = seq1_data.slice(1,).join('').trim();
         var predicteds = infer_batches(seq1_str);
+        // var text = document.createTextNode(predicteds + "\n");
+        // outputStatusElement.appendChild(text);
+        // status(predicteds);
 
         for (var j = 1, seq; seq = sequences[j]; j++){
             var lines = sequences[j].split('\n');
@@ -77,38 +71,6 @@ function parse_fasta_files(files){
     reader.readAsText(f, "UTF-8");
   }
 }
-
-// Parse fasta string contents 
-function parse_fasta_str(string){
-    console.log("parsing string");
-    fasta = string.trim();
-
-    // split on newlines... 
-    var sequences = fasta.split('\n>');
-    sequences[0] = sequences[0].replace('>', '');
-    // get ID from first line
-    // ID: tr|K4PEV9|K4PEV9_9VIRU
-    // rec_ids = [K4PEV9, K4PEV9_9VIRU]
-    var seq1_data = sequences[0].split('\n');
-    var l1_data = seq1_data[0].split(' ');
-    var rec_ids = l1_data[0].split('|').slice(1,);
-    var seq1_id = rec_ids[0];
-    var seq1_str = seq1_data.slice(1,).join('').trim();
-    var predicteds = infer_batches(seq1_str);
-
-    for (var j = 1, seq; seq = sequences[j]; j++){
-        var lines = sequences[j].split('\n');
-        // join the remaining lines back into a single string without newlines and 
-        // trailing or leading spaces
-        var seq_str = lines.slice(1,).join('').trim();
-        if (!seq_str){
-            return false;
-        }
-        var predicteds = infer_batches(seq_str);
-        var seq_id = rec_ids[j];
-    }
-}
-
 
 function read_sequences(seq_arr){
     const n = seq_arr.length;
@@ -143,6 +105,8 @@ function* get_generator(string){
     }
 }
 
+
+// read_sequences(TEST_STR);
 
 // Groups an iterable into size
 function* grouper(TEST_STR, size=32){
@@ -195,6 +159,21 @@ function buildUrl(url, parameters){
 }
 
 
+ 
+
+
+// console.log(request_url);
+
+/*
+dictionary = {"num0" : XXX
+"num1" : XXX
+"num2" : XXX
+"limit": 
+}
+JSON.stringify(dictionary)
+# make request
+
+*/
 const url = '/get_sequence';
 function getPredictions(array){
     var params = {
@@ -205,19 +184,17 @@ function getPredictions(array){
     };
     var data = JSON.stringify(params);
     var result = $.post(url, function(data, status) {
-    //alert( "success" );
-    /*if (status !== 200) {
+    alert( "success" );
+    if (status !== 200) {
         console.log('Looks like there was a problem. Status Code: ' +
         status);
         return;
-    }*/
+    }
     // Examine the text in the response
     // Print to UI
-    //var text = document.createTextNode(JSON.stringify(data) + "\n");
-    //outputStatusElement.appendChild(text);
+    var text = document.createTextNode(JSON.stringify(data) + "\n");
+    outputStatusElement.appendChild(text);
     // Handle data returned
-        console.log('Status Code: ' + status);
-        console.log("data: " + JSON.stringify(data) + "\n");
 
     })
     .done(function() {
@@ -229,6 +206,28 @@ function getPredictions(array){
     .always(function() {
         alert( "finished" );
     });
+
+/*    const request_url =  buildUrl(url, params);
+    fetch(request_url)
+      .then(
+        function(response) {
+          if (response.status !== 200) {
+            console.log('Looks like there was a problem. Status Code: ' +
+              response.status);
+            return;
+          }
+          // Examine the text in the response
+          response.json().then(function(data) {
+            console.log(data);
+            // Print to UI
+            var text = document.createTextNode(JSON.stringify(data) + "\n");
+            outputStatusElement.appendChild(text);
+          });
+        }
+      )
+      .catch(function(err) {
+        console.log('Fetch Error :-S', err);
+      });*/
 }
 
 
