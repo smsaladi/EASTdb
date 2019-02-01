@@ -23,7 +23,6 @@ $("#runQueryButton").click(function(e) {
     // 4 cases
     console.log("button clicked");
     var string = $('#sequenceTextInput').val();
-    console.log(string);
     var fileInput = document.getElementById('sequenceFileInput');
     //var myFile = $('#sequenceFileInput').prop('files');
     if (fileInput.files[0]){
@@ -41,7 +40,7 @@ function parse_fasta_files(files){
     for (var i = 0, f; f = files[i]; i++) {
       var fileReader = new FileReader();
       // Closure to capture the file information.
-      reader.onload = function(){
+      fileReader.onload = function(){
         var contents = fileReader.result;
         fasta = contents.trim();
 
@@ -74,7 +73,7 @@ function parse_fasta_files(files){
         }
 
     };
-    reader.readAsText(f, "UTF-8");
+    fileReader.readAsText(f, "UTF-8");
   }
 }
 
@@ -164,18 +163,15 @@ function* grouper(TEST_STR, size=32){
 async function infer_batches(sequence_str){
     // load model
     const model = await tf.loadModel('https://www.its.caltech.edu/~saladi/epoch3_pruned_tfjs/model.json');
-    model.summary();
+    // model.summary();
     for (const x of grouper(sequence_str)){
-        //console.log(x);
         const seq_arr = read_sequences(x);
         seq_arr.print(verbose=true);
-        // seq_arr.print(verbose=true);
         const pred = model.predictOnBatch(seq_arr, verbose=true);
         console.log(await pred[0].data());
         console.log(await pred[1].data());
         getPredictions(await pred[1].data())
         return pred;
-        // return pred[1].data();
     }
 }
 
@@ -198,43 +194,45 @@ function buildUrl(url, parameters){
 const url = '/get_sequence';
 function getPredictions(array){
     var params = {
-        "num1" : array[0],
-        "num2" : array[1],
-        "num3" : array[2],
+        "num0" : array[0],
+        "num1" : array[1],
+        "num2" : array[2],
         "limit" : 10
     };
+
     var data = JSON.stringify(params);
-    var result = $.post(url, function(data, status) {
-    //alert( "success" );
-    /*if (status !== 200) {
-        console.log('Looks like there was a problem. Status Code: ' +
-        status);
-        return;
-    }*/
-    // Examine the text in the response
-    // Print to UI
-    //var text = document.createTextNode(JSON.stringify(data) + "\n");
-    //outputStatusElement.appendChild(text);
-    // Handle data returned
+
+    var result = $.post(url, params).done(function(result, status) {
+        // Examine the text in the response
+        // Handle data returned
         console.log('Status Code: ' + status);
-        console.log("data: " + JSON.stringify(data) + "\n");
+        var json_data = JSON.parse(result)
+        console.log("Result: " + JSON.stringify(json_data) + "\n");
+        if (status == 'success'){
+            // Print to UI
+            //var text = document.createTextNode(JSON.stringify(result) + "\n");
+            // outputStatusElement.appendChild(result);
+            // document.getElementById('output').innerHTML = JSON.stringify(result);
+            for (var j = 1, res; res = json_data[j]; j++){
+                var id = res["ids"];
+                var cube_3d = res["cube_3d"];
+                var d = res["d"];
+                $('#output').append(JSON.stringify(j) + '.  ID: ' + JSON.stringify(id) + '</p>');
+                $('#output').append('<p> 3D predicted points: ' + cube_3d + '</p>');
+                $('#output').append('<p> Distance: ' + JSON.stringify(d) + '</p><br>');
+            }
+        }
 
     })
-    .done(function() {
-        alert( "second success" );
-    })
     .fail(function() {
-        alert( "YOU FAILED" );
-    })
-    .always(function() {
-        alert( "finished" );
+        alert( "Post request failed" );
     });
 }
 
 
 // const outputStatusElement = document.getElementById('status');
 // const status = msg => outputStatusElement.innerText = msg;
-var outputStatusElement = document.getElementById("status");
+var outputStatusElement = document.getElementById("output");
 
 
 

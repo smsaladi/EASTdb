@@ -48,7 +48,7 @@ module.exports = function(app, passport) {
 		var num2 = req.body["num2"]
 
 		var query = "select ids, preds_3dim_0, preds_3dim_1, preds_3dim_2, cube_3d, \'(" + num0 + ", " + num1 + ", " + num2 + ")\'::cube <-> cube_3d as d from sample order by d limit " + limit + ";"
-	
+		
 		client.query(query, function(err, result) {
 			if (err) {
 				console.log("Error with post request /get_sequence");
