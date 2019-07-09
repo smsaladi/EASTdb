@@ -93,7 +93,7 @@ def setup_db(table, wipe=False):
     # write to database
     # dialect+driver://username:password@host:port/database
     # change testdb to eastdb for final version
-    engine = create_engine("postgresql://postgres:psqlpass@131.215.26.148:5433/eastdb")
+    engine = create_engine("postgresql://postgres:psqlpass@131.215.2.28:5433/eastdb")
      
     if not wipe:
         return engine
