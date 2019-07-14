@@ -1,0 +1,9 @@
+# embed_auto_bn9
+# embed_auto10
+# embed_auto_bn10
+# 
+# eauto3d
+# embedding_autoencoder_out
+# 
+# embedding_autoencoder
+
