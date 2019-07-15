@@ -1,16 +1,16 @@
 --
 --
 -- Creates `index`es on the necessary columns
--- PGPASSWORD=psqlpass psql -U postgres -p 5433 -h 192.168.157.69 < load_data.sql
+-- PGPASSWORD=psqlpass psql -U postgres -p 5433 -h 192.168.157.69 -vdir="/home/saladi/github/eastdb" < load_data.sql
 -- 
 --
 
 
 -- \connect eastdb
-CREATE extension cube;
+CREATE EXTENSION IF NOT EXISTS cube;
 
+-- create tables
 DROP TABLE IF EXISTS uniref50;
-
 CREATE TABLE IF NOT EXISTS uniref50 (
     ids VARCHAR(10),
     coords_3d float[3],
@@ -18,15 +18,16 @@ CREATE TABLE IF NOT EXISTS uniref50 (
 );
 
 DROP TABLE IF EXISTS uniref50_seq;
-
 CREATE TABLE IF NOT EXISTS uniref50_seq (
     ids VARCHAR(10),
     seq TEXT
 );
 
-
-COPY Uniref50 from 'embed.import.csv' CSV;
-COPY Uniref50_Seq from 'seq.import.csv' CSV;
+-- load files into tables
+\! pwd
+\cd :dir
+\copy Uniref50 from 'embed.import.csv' CSV;
+\copy Uniref50_Seq from 'seq.import.csv' CSV;
 
 -- Simple hash index on the id
 CREATE INDEX IF NOT EXISTS id_hash_idx ON Uniref50 USING hash(ids);
