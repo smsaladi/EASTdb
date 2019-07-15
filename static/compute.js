@@ -5,69 +5,28 @@ JavaScript
 
 
 const IUPAC_CODES =  Array.from('ACDEFGHIKLMNPQRSTVWY*');
-TEST_STR = "MQVVDPKAFIQKFDNGGRNIDCIRVSEVYSDGGFIKNEKVDAVQRTESSISIKSINGESRIIKGIPIIDPNVIDEERNKKKYSKVNIGAIIISIHKLGYYEREMSRGRCLLVDGRRSGGGGIIKAFEFDISKGPAHFVLVPNAVFDIHDELLDRACEVFIIFDNVNYRGGSYPFAIEIGAIYRMSNVFNCYHRMGVPGRKGSIGSIYQEVHCTKTISEEDEESVLSEMCVAREAGRISDAERSFGFESERGKRSLIMPWRKRGPSFFRDYSVGEGSSETEENLCRVRSSTGSIDERDIPEKVLDNKFRSASERRKLQSNFREASHGRSSCKPRSVKLDKRDDRVPGGSLWREVEEIEEEDITEAALGECFQGVREKLRAREHPSGVHGC"
-
 
 var input_symbols = {};
 var x = 0;
 
-
 IUPAC_CODES.forEach(function (i) { 
-    input_symbols[i] = x; 
+    input_symbols[i] = x;
     x ++;
 });
 
+function encode_seq(seq) {
+  
+}
 
-// Upload FASTA file
-const fastaFile = document.getElementById('fasta-file')
+function prep_seq(seq) {
 
-fastaFile.addEventListener('change', evt => {
-  var files = evt.target.files;
-  // Display thumbnails & issue call to predict each image.
-  for (var i = 0, f; f = files[i]; i++) {
-    var reader = new FileReader();
-    // Closure to capture the file information.
-    reader.onload = function(event){
-        var contents = event.target.result;
-        fasta = contents.trim();
+}
 
-        // split on newlines... 
-        var sequences = fasta.split('\n>');
-        sequences[0] = sequences[0].replace('>', '');
-        // get ID from first line
-        // ID: tr|K4PEV9|K4PEV9_9VIRU
-        // rec_ids = [K4PEV9, K4PEV9_9VIRU]
-        var seq1_data = sequences[0].split('\n');
-        var l1_data = seq1_data[0].split(' ');
-        var rec_ids = l1_data[0].split('|').slice(1,);
-        var seq1_id = rec_ids[0];
-        var seq1_str = seq1_data.slice(1,).join('').trim();
-        status(seq1_str);
-        //infer_batches(seq1_str);
-
-        for (var j = 1, seq; seq = sequences[j]; j++){
-            var lines = sequences[j].split('\n');
-            // join the remaining lines back into a single string without newlines and 
-            // trailing or leading spaces
-            var seq_str = lines.slice(1,).join('').trim();
-            if (!seq_str){
-                return false;
-            }
-            // status(seq_str);
-            var seq_id = rec_ids[j];
-        }
-
-    };
-    reader.readAsText(f, "UTF-8");
-  }
-});
-
-
-
-function read_sequences(seq_arr){
+// Parse sequence box
+function read_sequences(seq_arr) {
     const n = seq_arr.length;
     // encode string
-    for (var i = 0; i < n; i++){
+    for (var i = 0; i < n; i++) {
         seq_arr[i] = input_symbols[seq_arr[i]];
         var indx = seq_arr[i];
         //tf_arr[indx] = 1;
@@ -92,9 +51,6 @@ function* get_generator(string){
     }
 }
 
-
-// read_sequences(TEST_STR);
-
 // Groups an iterable into size
 function* grouper(TEST_STR, size=32){
     var current_group = [];
@@ -106,33 +62,21 @@ function* grouper(TEST_STR, size=32){
             current_group =[];
         }
     }
-    if (current_group){
+    if (current_group)
         yield current_group;
-    }
 }
 
 
 async function infer_batches(sequence_str){
-    // load model
     const model = await tf.loadModel('https://www.its.caltech.edu/~saladi/epoch3_pruned_tfjs/model.json');
-    // model.summary();
     for (const x of grouper(sequence_str)){
-        //console.log(x);
         const seq_arr = read_sequences(x);
-        // seq_arr.print(verbose=true);
         const pred = model.predictOnBatch(seq_arr);
         // model.predictOnBatch(seq_arr).print();
-        // console.log(pred);
         yield pred;
 
     }
 }
-
-const url = 'http://127.0.0.1:5000/get_nums';
-
-var params = {
-    numbers: [1, 2, 3] 
-};
 
 function buildUrl(url, parameters){
   var qs = "";
@@ -147,8 +91,7 @@ function buildUrl(url, parameters){
   return url;
 }
 
-const request_url =  buildUrl(url, params);
-// console.log(request_url);
+const request_url = buildUrl(url, params);
 
 fetch(request_url)
   .then(
@@ -170,9 +113,3 @@ fetch(request_url)
 
 const outputStatusElement = document.getElementById('status');
 const status = msg => outputStatusElement.innerText = msg;
-
-infer_batches(TEST_STR);
-
-
-
-

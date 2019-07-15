@@ -3,7 +3,6 @@ function toggleDiv(id) {
   div.style.display = div.style.display == "block" ? "none" : "block";
 }
 
-
 $("#sampleDataButton").on("click", function(){
   $('#sequenceTextInput').val(
 `>EXAMPLE PROTEIN SEQUENCE
@@ -39,6 +38,62 @@ LKGRESLSAEALLES`
     );
 });
 
-$("#resetButton").on("click", function(){
+$("#resetButton").on("click", function() {
   // TODO: FILL ME OUT
+});
+
+function objectifyForm(form) {
+  // Turns a form into key-value pairs
+  // https://stackoverflow.com/a/1186309/2320823
+  var formArray = form.serializeArray();
+  var data = {};
+  for (var i = 0; i < formArray.length; i++){
+    data[formArray[i]['name']] = formArray[i]['value'];
+  }
+  return data;
+}
+
+function rmspace(text) {
+  // Removes newline characters and spaces
+  // https://stackoverflow.com/a/10805180/2320823
+  return text.replace(/[\n\r\s]+/g, "");
+}
+
+function parse_fasta(text) {
+  if (!text.includes('>'))
+    return [{"id": "", "seq": rmspace(text)}];
+  var entries = text.split('>');
+  entries.shift();
+  return entries.map(function(e) {
+    var lines = e.split('\n');    
+    var header = lines.shift();
+    var seq = lines.join('');
+    return {"id": header, "seq": rmspace(seq)};
+  });
+}
+
+$("#queryForm").on("submit", function(e) {
+  // Otherwise, page refreshes
+  e.preventDefault();
+
+  var formData = objectifyForm($(this));
+
+  // Parse form data into payload
+  var meta = {"email": formData['email'], "action": "search"};
+  var seqs = parse_fasta(formData['seqInput']);
+  var payload = {"messages": meta, "collection": seqs};
+
+  // then submit
+  $.ajax({
+    url: '/query',
+    method: 'POST',
+    data: JSON.stringify(payload),
+    dataType: 'json',
+    contentType: "application/json"
+  }).done(function(data) {
+    console.log(data);
+  }).fail(function(data, status) {
+    console.log("fail");
+    console.log(data);
+  });
 });

@@ -100,13 +100,13 @@
 
 		<h1>Submit query</h1>
 
-		<form action="/get_data">
+		<form id="queryForm">
 			<div class="form-group">
-				<input type="email" class="form-control" id="emailInput" placeholder="username@university.edu">
+				<input type="email" class="form-control" id="emailInput" name="email" placeholder="username@university.edu">
 			</div>
 			<div class="form-group">
 				<label for="sequenceTextInput">Input protein sequence(s) (plain text or FASTA-formatted, if multiple)</label>
-				<textarea class="form-control" id="sequenceTextInput" rows="10"></textarea>
+				<textarea class="form-control" id="sequenceTextInput" name="seqInput" rows="10"></textarea>
 			</div>
 			<div class="form-row">
 				<div class="col">
@@ -118,7 +118,7 @@
 				<div class="col">
 					<div class="form-group">
 						<label for="targetDatabaseSelect">Target database</label>
-						<select class="form-control" id="targetDatabaseSelect">
+						<select class="form-control" id="targetDatabaseSelect" name="database">
 							<option disabled>UniprotKB</option>
 							<option disabled>Uniref100</option>
 							<option disabled>Uniref90</option>
@@ -129,7 +129,7 @@
 				<div class="col">
 					<div class="form-group">
 						<label for="hitCountSelect">Hit count</label>
-						<select class="form-control" id="hitCountSelect">
+						<select class="form-control" id="hitCountSelect" name="hitcount">
 							<option>50</option>
 							<option selected>100</option>
 							<option>250</option>
@@ -139,7 +139,7 @@
 					</div>
 				</div>
 			</div>
-			<button type="submit" class="btn btn-primary" id="runQueryButton"><i class="fas fa-wrench"></i> Run query</button>
+			<button type="submit" class="btn btn-primary" id="runQueryButton"><i class="fas fa-wrench"></i>Run query</button>
 			<button type="button" class="btn btn-secondary" id="sampleDataButton">Sample data</button>
 			<button type="button" class="btn btn-secondary">Reset fields</button>
 		</form>
@@ -150,7 +150,11 @@
 
 		
 
-		<label style="display: inline-block; margin-top: 20px"><%= data %></label>
+		<label style="display: inline-block; margin-top: 20px">
+
+			THIS IS WHERE THE OUTPUT WILL GO
+		
+		</label>
 
 		</div id="output"></div>
 
@@ -158,9 +162,9 @@
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-		integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-		crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"
+		integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+		crossorigin="anonymous"></script>  
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
 		integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
 		crossorigin="anonymous"></script>
@@ -171,6 +175,19 @@
 
 	<!-- tfjs and embedding code-->
 	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"> </script>
-	<script src="/static/compute.js"></script>
+	<!-- script src="/static/compute.js"></script -->
+
+	<!-- https://flask-wtf.readthedocs.io/en/stable/csrf.html -->
+	<script type="text/javascript">
+		var csrf_token = "{{ csrf_token() }}";
+	
+		$.ajaxSetup({
+			beforeSend: function(xhr, settings) {
+				if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+					xhr.setRequestHeader("X-CSRFToken", csrf_token);
+				}
+			}
+		});
+	</script>
   </body>
 </html>
