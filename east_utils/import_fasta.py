@@ -45,34 +45,9 @@ def grouper(iterable, size=64):
         except StopIteration:
             return
 
-
-messages = {
-    "pre":
-"""
-Set up table with the following:
-
-> postgresql://postgres:psqlpass@131.215.2.28:5433/eastdb")
-
-DROP TABLE IF EXISTS {table};
-
-CREATE TABLE IF NOT EXISTS {table} (
-    ids VARCHAR(10),
-    coords_3d double[3],
-    coords_8d double[8]
-);
-
-Let the output file finish writing and then import:
-COPY {table} from '{tempfn}' CSV
-
-""",
-    "post":
-"""
-Convert column types and create indexes
-"""
-}
-
 max_int = np.iinfo(int).max
 def fmt_arr(x):
+    """Formats numpy array into array for postgres to read"""
     x = np.array(x)
     x_str = np.array2string(x,
         max_line_width=max_int, suppress_small=True, separator=',')
@@ -80,9 +55,20 @@ def fmt_arr(x):
     x_str = '{' + x_str[1:-1] + '}'
     return x_str
 
-def print_postgres(ids, seqs, embed_3d, embed_8d):
-    for i, s, d3, d8 in zip(ids, seqs, embed_3d, embed_8d):
-        print('{},"{}","{}"'.format(i, fmt_arr(d3), fmt_arr(d8)))
+def format_postgres(ids, seqs, embed_3d, embed_8d):
+    df = pd.DataFrame({
+        'id': ids,
+        'seq': seqs,
+        '3d': embed_3d,
+        '8d': embed_8d
+    })
+    df['3d'] = df['3d'].apply(fmt_arr)
+    df['8d'] = df['8d'].apply(fmt_arr)
+
+    write_args = dict(index=False, header=False, mode='a')
+    df[['id', '3d', '8d']].to_csv("embed.import.csv", **write_args)
+    df[['id', 'seq']].to_csv("seq.import.csv", **write_args)
+
     return
 
 def import_fasta(fasta_file):
@@ -90,7 +76,7 @@ def import_fasta(fasta_file):
     for batch in tqdm(grouper(seqiter)):
         ids, seqs = zip(*batch)
         embed_3d, embed_8d = infer_batch(seqs)
-        print_postgres(ids, seqs, embed_3d, embed_8d)
+        format_postgres(ids, seqs, embed_3d, embed_8d)
     
     print("CSV file created. COPY to database, and don't forget to create the index!")
     return
