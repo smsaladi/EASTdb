@@ -26,7 +26,7 @@ def prepare_batch(seqs):
     seq_arr = to_categorical(seq_arr, num_classes=21)
     return seq_arr
 
-def infer_batch(seqs, tfserver='http://192.168.157.69:8501/v1/models/dspace:predict'):
+def infer_batch(seqs, tfserver='http://131.215.2.28:8501/v1/models/dspace:predict'):
     """
     Returns 3d then 8d
     """

@@ -46,13 +46,13 @@ def grouper(iterable, size=64):
             return
 
 max_int = np.iinfo(int).max
-def fmt_arr(x):
+def fmt_arr(x, ends='{}'):
     """Formats numpy array into array for postgres to read"""
     x = np.array(x)
     x_str = np.array2string(x,
         max_line_width=max_int, suppress_small=True, separator=',')
     x_str = x_str.replace(' ', '')
-    x_str = '{' + x_str[1:-1] + '}'
+    x_str = ends[0] + x_str[1:-1] + ends[-1]
     return x_str
 
 def format_postgres(ids, seqs, embed_3d, embed_8d):

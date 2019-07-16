@@ -16,10 +16,12 @@ from sqlalchemy_repr import PrettyRepresentableBase
 import tweepy
 
 import numpy as np
+import pandas as pd
 
 import click
 import pytest
 
+from models import db
 import east_utils
 
 # import utils
@@ -35,8 +37,7 @@ app.config['BASE_URL'] = os.environ['BASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['SQLALCHEMY_DATABASE_URI']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
-# db = SQLAlchemy(model_class=PrettyRepresentableBase)
-# db.init_app(app)
+db.init_app(app)
 
 # For monitoring papers (until Biorxiv provides a real API)
 app.config['TWITTER_APP_KEY'] = os.environ['TWITTER_APP_KEY']
@@ -101,6 +102,7 @@ def query_sequence():
         )
     
     # request looks ok, now calculate embeddings
+    print("looking up embedding")
     embed_3d, embed_8d = east_utils.infer_batch(seqs)
 
     for i, _ in enumerate(collection):
@@ -110,16 +112,46 @@ def query_sequence():
                 
         collection[i]['3d'] = embed_3d[i]
         collection[i]['8d'] = embed_8d[i]
+
+        # lookup embedding for each and add to collection with key "hits"
+        print("submitting query", flush=True)
+        df_hits = lookup_embedding(embed_8d[i], 10)
+        print(df_hits)
+        collection[i]['hits'] = df_hits.values.tolist()
         
     return format_response(data['messages'], collection)
 
-def lookup_embedding(coords):
+query_template = """
+    SELECT {table}.ids as ids, {col} as coords, '{coords}'::cube <-> {col} as d, seq
+    FROM {table}
+    INNER JOIN {table}_seq ON {table}.ids = {table}_seq.ids
+    ORDER BY d
+    LIMIT {count};"""
+
+def lookup_embedding(coords, count):
+    """Looks up coordinates in database
+    """
     # avoid sql injection by checking/forcing type
     coords = np.array(coords, dtype=float)
     if np.any(coords == np.nan):
         return ""
 
-    return
+    if len(coords) == 3:
+        col = 'cube_3d'
+    elif len(coords) == 8:
+        col = 'cube_8d'
+    else:
+        raise ValueError("Improper number of coordinates for lookup")
+
+    coords = east_utils.fmt_arr(coords, ends='()')
+
+    query = query_template.format(
+        table='Uniref50', col=col, coords=coords, count=count)
+    print(query)
+
+    df = pd.read_sql(query, db.engine, coerce_float=False)
+
+    return df
 
 def format_response(messages, collection):
     if 'apikey' in messages.keys():
