@@ -96,7 +96,7 @@ def query_sequence():
         return format_error(
             "Request requires a `collection` to work with. Check the sample request."
         )
-
+    hitcount = data['messages']['hitcount']
     collection = data['collection']
 
     try:
@@ -120,7 +120,7 @@ def query_sequence():
 
         # lookup embedding for each and add to collection with key "hits"
         print("submitting query", flush=True)
-        df_hits = lookup_embedding(embed_8d[i], 10)
+        df_hits = lookup_embedding(embed_8d[i], hitcount)
         print(df_hits)
         collection[i]['hits'] = df_hits.to_dict(orient='records')
         

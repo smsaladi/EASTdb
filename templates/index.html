@@ -36,11 +36,10 @@
       <div class="form-group">
         <label for="hitCountSelect">Hit count</label>
         <select class="form-control" id="hitCountSelect" name="hitcount">
+          <option selected>10</option>
           <option>50</option>
-          <option selected>100</option>
+          <option>100</option>
           <option>250</option>
-          <option>500</option>
-          <option>1000</option>
         </select>
       </div>
     </div>
@@ -66,16 +65,20 @@
 
 <!-- These are the result template divs -->
 
-<div class="card" id='result_query_tpl' style="display:none">
-  <div class="card-header div_query_name">
-    QUERY NAME
+<div id='result_query_tpl' style="display:none">
+  <div class="card">
+    <div class="card-header div_query_name">
+      QUERY NAME
+    </div>
+    <div class="card-body">
+      <!-- <h5 class="card-title">Special title treatment</h5>
+      <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
+      <a href="#" class="btn btn-primary">Go somewhere</a> -->
+    
+    </div>
   </div>
-  <div class="card-body">
-    <!-- <h5 class="card-title">Special title treatment</h5>
-    <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-    <a href="#" class="btn btn-primary">Go somewhere</a> -->
-  
-  </div>
+  <br/>
+  <br/>
 </div>
   
 <!-- This is the template hit div -->

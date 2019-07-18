@@ -79,7 +79,9 @@ $("#queryForm").on("submit", function(e) {
   var formData = objectifyForm($(this));
 
   // Parse form data into payload
-  var meta = {"email": formData['email'], "action": "search"};
+  var meta = {"action": "search",
+              "email": formData['email'],
+              "hitcount": formData['hitcount']};
   var seqs = parse_fasta(formData['seqInput']);
   var payload = {"messages": meta, "collection": seqs};
 
@@ -92,13 +94,12 @@ $("#queryForm").on("submit", function(e) {
     contentType: "application/json"
   }).done(function(data) {
     // Only work with one query sequence at a time for the app
-    data['collection'] = [data['collection'][0]]
     data['collection'].map(function(query) {
       var query_div = drawResultFrame(query['id']);
       query['hits'].map(function(hit) {
         var [alnQuery, alnHit, alnScore] = pairwiseAlign(query['seq'], hit['seq']);
         console.log(hit);
-        drawHit(hit['ids'], alnQuery, alnHit, alnScore).appendTo(query_div);
+        drawHit(hit['ids'], alnQuery, alnHit, alnScore).appendTo(query_div.find(".card"));
       });
     });
   }).fail(function(data, status) {
