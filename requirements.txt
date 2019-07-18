@@ -1,22 +1,25 @@
 gunicorn
 gevent
 
-newrelic
-
 flask
 Flask-SQLAlchemy
+Flask-WTF
+GeoAlchemy2
+psycopg2
 sqlalchemy-repr
-Flask-RQ2
 Flask-Mail
-Flask-table
-flask-wtf
+python-dotenv
 
-pymysql
+numpy
+pandas
+tensorflow
+requests
 
 tweepy
-pandas
+
+biopython
+tqdm
 
 pytest
 pytest-cov
 codecov
-

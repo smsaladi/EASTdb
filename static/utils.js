@@ -91,9 +91,62 @@ $("#queryForm").on("submit", function(e) {
     dataType: 'json',
     contentType: "application/json"
   }).done(function(data) {
-    console.log(data);
+    // Only work with one query sequence at a time for the app
+    data['collection'] = [data['collection'][0]]
+    data['collection'].map(function(query) {
+      var query_div = drawResultFrame(query['id']);
+      query['hits'].map(function(hit) {
+        var [alnQuery, alnHit, alnScore] = pairwiseAlign(query['seq'], hit['seq']);
+        console.log(hit);
+        drawHit(hit['ids'], alnQuery, alnHit, alnScore).appendTo(query_div);
+      });
+    });
   }).fail(function(data, status) {
+    // TODO: display error message!
     console.log("fail");
     console.log(data);
   });
 });
+
+function drawResultFrame(name) {
+  var tpl = $("#result_query_tpl").clone();
+  tpl = tpl.removeAttr('id').removeAttr("style");
+  $(tpl).find(".div_query_name").text(name);
+  $("#output").append(tpl);
+  return tpl;
+}
+
+function drawHit(hit, alnQuery, alnHit, alnScore) {
+  var tpl = $("#result_hit_tpl").clone();
+  tpl = tpl.removeAttr('id').removeAttr("style");
+
+  $(tpl).find(".hit_id").text(hit);
+  $(tpl).find(".hit_url").attr("href", "https://uniprot.org/uniprot/" + hit);
+  $(tpl).find(".hit_score").text(alnScore);
+  $(tpl).find(".query_aln").text(alnQuery);
+  $(tpl).find(".hit_aln").text(alnHit);
+
+  return tpl;
+}
+
+
+
+function pairwiseAlign(protA, protB) {
+  // Essentially calls code from Sequence Manipulation Suite (Paul Stoddard)
+  // License: GPLv2 or later (https://www.bioinformatics.org/sms2/mirror.html)
+  
+  // Set up scoring
+	var scoreSet = new ScoreSet();
+	scoreSet.setScoreSetParam(
+    scoringMatrix=new Blosum62(), gapPenalty=0.5, beginGapPenalty=2, endGapPenalty=0.5);
+
+	var alignment = new AlignPairLinear();
+  alignment.setAlignParam(protA, protB, scoreSet);
+  alignment.align();
+
+  var alnA = alignment.getAlignedM();
+  var alnB = alignment.getAlignedN();
+  var score = alignment.score;
+
+  return [alnA, alnB, score];
+}

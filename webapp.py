@@ -74,6 +74,11 @@ def home():
     """
     return flask.render_template('index.html')
 
+@app.route('/about')
+def about():
+    """Renders the website with current results
+    """
+    return flask.render_template('about.html')
 
 @app.route('/query', methods=['POST'])
 def query_sequence():
@@ -117,7 +122,7 @@ def query_sequence():
         print("submitting query", flush=True)
         df_hits = lookup_embedding(embed_8d[i], 10)
         print(df_hits)
-        collection[i]['hits'] = df_hits.values.tolist()
+        collection[i]['hits'] = df_hits.to_dict(orient='records')
         
     return format_response(data['messages'], collection)
 

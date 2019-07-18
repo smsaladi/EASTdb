@@ -3,3 +3,25 @@
     font-size: 90%;
     font-family:'Courier New';    
 }
+
+body{
+    padding-bottom:70px;
+}
+
+.footer-main {
+     position: absolute;
+}
+
+/* https://stackoverflow.com/a/38902310/2320823 */
+.testimonial-group > .row {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.testimonial-group > .row > .col-xs-4 {
+    display: inline-block;
+    float: none;
+}
+
+.result-text{
+    font-family:    'Courier New', Courier, monospace;
+}
