@@ -94,12 +94,23 @@ $("#queryForm").on("submit", function(e) {
     contentType: "application/json"
   }).done(function(data) {
     // Only work with one query sequence at a time for the app
-    data['collection'].map(function(query) {
+    data['collection'].forEach(async function(query) {
       var query_div = drawResultFrame(query['id']);
-      query['hits'].map(function(hit) {
-        var [alnQuery, alnHit, alnScore] = pairwiseAlign(query['seq'], hit['seq']);
+      query['hits'].forEach(async function(hit) {
         console.log(hit);
-        drawHit(hit['ids'], alnQuery, alnHit, alnScore).appendTo(query_div.find(".card"));
+        query_div.find(".card").append(
+          drawHit(hit['ids'])
+        );
+
+        setTimeout(function () {
+          pairwiseAlign(query['seq'], hit['seq']
+            ).then(function(d) {
+              var [alnQuery, alnHit, alnScore] = d;
+              $(query_div).find(".hit_score").text(alnScore);
+              $(query_div).find(".query_aln").text(alnQuery);
+              $(query_div).find(".hit_aln").text(alnHit);
+            });
+          }, 0);
       });
     });
   }).fail(function(data, status) {
@@ -117,22 +128,18 @@ function drawResultFrame(name) {
   return tpl;
 }
 
-function drawHit(hit, alnQuery, alnHit, alnScore) {
+function drawHit(hit) {
   var tpl = $("#result_hit_tpl").clone();
   tpl = tpl.removeAttr('id').removeAttr("style");
 
   $(tpl).find(".hit_id").text(hit);
   $(tpl).find(".hit_url").attr("href", "https://uniprot.org/uniprot/" + hit);
-  $(tpl).find(".hit_score").text(alnScore);
-  $(tpl).find(".query_aln").text(alnQuery);
-  $(tpl).find(".hit_aln").text(alnHit);
 
   return tpl;
 }
 
 
-
-function pairwiseAlign(protA, protB) {
+async function pairwiseAlign(protA, protB) {
   // Essentially calls code from Sequence Manipulation Suite (Paul Stoddard)
   // License: GPLv2 or later (https://www.bioinformatics.org/sms2/mirror.html)
   
@@ -149,5 +156,5 @@ function pairwiseAlign(protA, protB) {
   var alnB = alignment.getAlignedN();
   var score = alignment.score;
 
-  return [alnA, alnB, score];
+  return await [alnA, alnB, score];
 }
