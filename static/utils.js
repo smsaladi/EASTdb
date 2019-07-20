@@ -99,7 +99,7 @@ $("#queryForm").on("submit", function(e) {
       query['hits'].forEach(async function(hit) {
         console.log(hit);
         query_div.find(".card").append(
-          drawHit(hit['ids'])
+          drawHit(hit['id'])
         );
 
         setTimeout(function () {

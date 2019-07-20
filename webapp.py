@@ -127,9 +127,9 @@ def query_sequence():
     return format_response(data['messages'], collection)
 
 query_template = """
-    SELECT {table}.ids as ids, {col} as coords, '{coords}'::cube <-> {col} as d, seq
+    SELECT {table}.id as id, {col} as coords, '{coords}'::cube <-> {col} as d, seq
     FROM {table}
-    INNER JOIN {table}_seq ON {table}.ids = {table}_seq.ids
+    INNER JOIN {table}_seq ON {table}.id = {table}_seq.id
     ORDER BY d
     LIMIT {count};"""
 
@@ -142,9 +142,9 @@ def lookup_embedding(coords, count):
         return ""
 
     if len(coords) == 3:
-        col = 'cube_3d'
+        col = 'coords_3d'
     elif len(coords) == 8:
-        col = 'cube_8d'
+        col = 'coords_8d'
     else:
         raise ValueError("Improper number of coordinates for lookup")
 

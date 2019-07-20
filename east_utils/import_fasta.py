@@ -29,7 +29,11 @@ def read_sequences(fn):
 
     with op(fn, 'rt') as fh:
         for r in Bio.SeqIO.parse(fh, "fasta"):
-            _, rec_id, _ = r.id.split('|')
+            # if importing from uniprot
+            if r.id[2] == '|':
+                _, rec_id, _ = r.id.split('|')
+            else:
+                rec_id = r.id
             seq = str(r.seq)
             yield rec_id, seq
 
@@ -46,7 +50,7 @@ def grouper(iterable, size=64):
             return
 
 max_int = np.iinfo(int).max
-def fmt_arr(x, ends='{}'):
+def fmt_arr(x, ends='()'):
     """Formats numpy array into array for postgres to read"""
     x = np.array(x)
     x_str = np.array2string(x,
@@ -55,7 +59,7 @@ def fmt_arr(x, ends='{}'):
     x_str = ends[0] + x_str[1:-1] + ends[-1]
     return x_str
 
-def format_postgres(ids, seqs, embed_3d, embed_8d):
+def format_postgres(ids, seqs, embed_3d, embed_8d, prefix):
     df = pd.DataFrame({
         'id': ids,
         'seq': seqs,
@@ -66,17 +70,20 @@ def format_postgres(ids, seqs, embed_3d, embed_8d):
     df['8d'] = df['8d'].apply(fmt_arr)
 
     write_args = dict(index=False, header=False, mode='a')
-    df[['id', '3d', '8d']].to_csv("embed.import.csv", **write_args)
-    df[['id', 'seq']].to_csv("seq.import.csv", **write_args)
+    df[['id', '3d', '8d']].to_csv(prefix + ".embed.csv", **write_args)
+    df[['id', 'seq']].to_csv(prefix + ".seq.csv", **write_args)
 
     return
 
 def import_fasta(fasta_file):
     seqiter = read_sequences(fasta_file)
-    for batch in tqdm(grouper(seqiter)):
+
+    prefix = fasta_file.replace('.fasta.gz', '') 
+
+    for batch in grouper(seqiter):
         ids, seqs = zip(*batch)
         embed_3d, embed_8d = infer_batch(seqs)
-        format_postgres(ids, seqs, embed_3d, embed_8d)
+        format_postgres(ids, seqs, embed_3d, embed_8d, prefix)
     
     print("CSV file created. COPY to database, and don't forget to create the index!")
     return
