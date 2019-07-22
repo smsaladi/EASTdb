@@ -72,6 +72,8 @@ function parse_fasta(text) {
   });
 }
 
+var pool = workerpool.pool('/static/worker.js', {maxWorkers: 5});
+
 $("#queryForm").on("submit", function(e) {
   // Otherwise, page refreshes
   e.preventDefault();
@@ -94,23 +96,24 @@ $("#queryForm").on("submit", function(e) {
     contentType: "application/json"
   }).done(function(data) {
     // Only work with one query sequence at a time for the app
-    data['collection'].forEach(async function(query) {
-      var query_div = drawResultFrame(query['id']);
-      query['hits'].forEach(async function(hit) {
+    data['collection'].forEach(function(query) {
+      let query_div = drawResultFrame(query['id']);
+      query['hits'].forEach(function(hit) {
         console.log(hit);
-        query_div.find(".card").append(
-          drawHit(hit['id'])
-        );
-
-        setTimeout(function () {
-          pairwiseAlign(query['seq'], hit['seq']
-            ).then(function(d) {
-              var [alnQuery, alnHit, alnScore] = d;
-              $(query_div).find(".hit_score").text(alnScore);
-              $(query_div).find(".query_aln").text(alnQuery);
-              $(query_div).find(".hit_aln").text(alnHit);
-            });
-          }, 0);
+        let hit_div = drawHit(hit['id']);
+        query_div.find(".card").append(hit_div);
+        
+        // Queue alignment to workers
+        var promise = pool.exec('pairwiseAlign', [query['seq'], hit['seq']])
+          .then(function (result) {
+            var [alnQuery, alnHit, alnScore] = result;
+            $(hit_div).find(".hit_score").text(alnScore);
+            $(hit_div).find(".query_aln").text(alnQuery);
+            $(hit_div).find(".hit_aln").text(alnHit);          
+          })
+          .catch(function (err) {
+            console.error(err);
+          });
       });
     });
   }).fail(function(data, status) {
@@ -136,25 +139,4 @@ function drawHit(hit) {
   $(tpl).find(".hit_url").attr("href", "https://uniprot.org/uniprot/" + hit);
 
   return tpl;
-}
-
-
-async function pairwiseAlign(protA, protB) {
-  // Essentially calls code from Sequence Manipulation Suite (Paul Stoddard)
-  // License: GPLv2 or later (https://www.bioinformatics.org/sms2/mirror.html)
-  
-  // Set up scoring
-	var scoreSet = new ScoreSet();
-	scoreSet.setScoreSetParam(
-    scoringMatrix=new Blosum62(), gapPenalty=0.5, beginGapPenalty=2, endGapPenalty=0.5);
-
-	var alignment = new AlignPairLinear();
-  alignment.setAlignParam(protA, protB, scoreSet);
-  alignment.align();
-
-  var alnA = alignment.getAlignedM();
-  var alnB = alignment.getAlignedN();
-  var score = alignment.score;
-
-  return await [alnA, alnB, score];
 }

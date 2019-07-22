@@ -105,18 +105,12 @@
 
 {% block custom_js %}
 
+<script src="https://cdn.jsdelivr.net/npm/workerpool@3.1.2/dist/workerpool.min.js"></script>
 <script src="/static/utils.js"></script>
 
 <!-- tfjs and embedding code-->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <!-- script src="/static/compute.js"></script -->
-
-<!-- alignment from Sequence Manipulation Suite (Paul Stoddard) -->
-<!-- https://www.bioinformatics.org/sms2/pairwise_align_protein.html -->
-<script type="text/javascript" src="static/align/sms_common.js"></script>
-<script type="text/javascript" src="static/align/align_pair_linear.js"></script>
-<script type="text/javascript" src="static/align/align_pair_quad.js"></script>
-<script type="text/javascript" src="static/align/pairwise_align_protein.js"></script>
 
 <!-- https://flask-wtf.readthedocs.io/en/stable/csrf.html -->
 <script type="text/javascript">
