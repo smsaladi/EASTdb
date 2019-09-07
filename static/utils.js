@@ -93,11 +93,14 @@ $("#queryForm").on("submit", function(e) {
     method: 'POST',
     data: JSON.stringify(payload),
     dataType: 'json',
-    contentType: "application/json"
+    contentType: "application/json",
+    start_time: performance.now()
   }).done(function(data) {
+    // Display time for request to return
+    var req_time = performance.now() - this.start_time;
     // Only work with one query sequence at a time for the app
     data['collection'].forEach(function(query) {
-      let query_div = drawResultFrame(query['id']);
+      let query_div = drawResultFrame(query['id'], req_time);
       query['hits'].forEach(function(hit) {
         console.log(hit);
         let hit_div = drawHit(hit['id']);
@@ -123,10 +126,11 @@ $("#queryForm").on("submit", function(e) {
   });
 });
 
-function drawResultFrame(name) {
+function drawResultFrame(name, timing) {
   var tpl = $("#result_query_tpl").clone();
   tpl = tpl.removeAttr('id').removeAttr("style");
   $(tpl).find(".div_query_name").text(name);
+  $(tpl).find(".div_timing").text(timing.toFixed(2) + " ms");
   $("#output").append(tpl);
   return tpl;
 }
@@ -140,3 +144,4 @@ function drawHit(hit) {
 
   return tpl;
 }
+
