@@ -8,7 +8,6 @@ import re
 
 import flask
 import click
-from flask_mail import Mail, Message
 from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from sqlalchemy_repr import PrettyRepresentableBase
@@ -65,8 +64,6 @@ tweepy_auth = tweepy.OAuthHandler(
 tweepy_auth.set_access_token(
     app.config['TWITTER_KEY'], app.config['TWITTER_SECRET'])
 tweepy_api = tweepy.API(tweepy_auth)
-
-mail = Mail(app)
 
 @app.route('/')
 def home():

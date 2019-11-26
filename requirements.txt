@@ -7,7 +7,6 @@ Flask-WTF
 GeoAlchemy2
 psycopg2
 sqlalchemy-repr
-Flask-Mail
 python-dotenv
 
 numpy
