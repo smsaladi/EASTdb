@@ -9,10 +9,7 @@ import requests
 
 import numpy as np
 
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.utils import to_categorical
+from .keras_utils import pad_sequences, to_categorical
 
 
 IUPAC_CODES = list('ACDEFGHIKLMNPQRSTVWY*')
