@@ -12,8 +12,6 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from sqlalchemy_repr import PrettyRepresentableBase
 
-import tweepy
-
 import numpy as np
 import pandas as pd
 
@@ -38,32 +36,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 db.init_app(app)
 
-# For monitoring papers (until Biorxiv provides a real API)
-app.config['TWITTER_APP_KEY'] = os.environ['TWITTER_APP_KEY']
-app.config['TWITTER_APP_SECRET'] = os.environ['TWITTER_APP_SECRET']
-app.config['TWITTER_KEY'] = os.environ['TWITTER_KEY']
-app.config['TWITTER_SECRET'] = os.environ['TWITTER_SECRET']
-
-# for author notification
-app.config['MAIL_SERVER'] = os.environ['MAIL_SERVER']
-app.config['MAIL_PORT'] = int(os.environ['MAIL_PORT'])
-app.config['MAIL_USE_TLS'] = bool(int(os.environ['MAIL_USE_TLS']))
-app.config['MAIL_USERNAME'] = os.environ['MAIL_USERNAME']
-app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
-app.config['MAIL_DEFAULT_SENDER'] = os.environ['MAIL_DEFAULT_SENDER'].replace("'", "")
-app.config['MAIL_REPLY_TO'] = os.environ['MAIL_REPLY_TO'].replace("'", "")
-app.config['MAIL_MAX_EMAILS'] = int(os.environ['MAIL_MAX_EMAILS'])
-
 app.config['DEBUG'] = os.environ.get('DEBUG', 0)
 
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 csrf = CSRFProtect(app)
-
-tweepy_auth = tweepy.OAuthHandler(
-    app.config['TWITTER_APP_KEY'], app.config['TWITTER_APP_SECRET'])
-tweepy_auth.set_access_token(
-    app.config['TWITTER_KEY'], app.config['TWITTER_SECRET'])
-tweepy_api = tweepy.API(tweepy_auth)
 
 @app.route('/')
 def home():
