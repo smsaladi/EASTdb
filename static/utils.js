@@ -83,7 +83,9 @@ $("#queryForm").on("submit", function(e) {
   // Parse form data into payload
   var meta = {"action": "search",
               "email": formData['email'],
-              "hitcount": formData['hitcount']};
+              "hitcount": formData['hitcount'],
+              "dim": formData['dim'],
+             };
   var seqs = parse_fasta(formData['seqInput']);
   var payload = {"messages": meta, "collection": seqs};
 

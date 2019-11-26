@@ -97,6 +97,8 @@ def query_sequence():
             "Request requires a `collection` to work with. Check the sample request."
         )
     hitcount = data['messages']['hitcount']
+    lookup_dim = data['messages']['dim']
+
     collection = data['collection']
 
     try:
@@ -120,7 +122,10 @@ def query_sequence():
 
         # lookup embedding for each and add to collection with key "hits"
         print("submitting query", flush=True)
-        df_hits = lookup_embedding(embed_8d[i], hitcount)
+        if lookup_dim == '3':
+            df_hits = lookup_embedding(embed_3d[i], hitcount)
+        else:
+            df_hits = lookup_embedding(embed_8d[i], hitcount)
         print(df_hits)
         collection[i]['hits'] = df_hits.to_dict(orient='records')
         
