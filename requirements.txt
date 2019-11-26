@@ -4,7 +4,6 @@ gevent
 flask
 Flask-SQLAlchemy
 Flask-WTF
-GeoAlchemy2
 psycopg2
 sqlalchemy-repr
 python-dotenv

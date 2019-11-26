@@ -3,7 +3,6 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_repr import PrettyRepresentableBase
-from geoalchemy2 import Geometry
 
 import numpy as np
 
