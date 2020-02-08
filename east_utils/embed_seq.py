@@ -13,13 +13,14 @@ from .keras_utils import pad_sequences, to_categorical
 
 
 IUPAC_CODES = list('ACDEFGHIKLMNPQRSTVWY*')
+pad_val = len(IUPAC_CODES) - 1
 input_symbols = {label: i for i, label in enumerate(IUPAC_CODES)}
 def seq_to_arr(seq):
-    return np.array([input_symbols.get(x, 20) for x in seq])
+    return np.array([input_symbols.get(x, pad_val) for x in seq])
 
 def prepare_batch(seqs):
     seq_arr = [seq_to_arr(s) for s in seqs]
-    seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post")
+    seq_arr = pad_sequences(seq_arr, maxlen=2000, padding="post", value=pad_val)
     seq_arr = to_categorical(seq_arr, num_classes=21)
     return seq_arr
 
