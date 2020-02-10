@@ -24,9 +24,16 @@ def prepare_batch(seqs):
     seq_arr = to_categorical(seq_arr, num_classes=21)
     return seq_arr
 
-def infer_batch(seqs, tfserver='http://131.215.2.28:8501/v1/models/dspace_embed:predict'):
-    """
-    Returns 3d then 8d
+def infer_batch(seqs, host, model, ver=None):
+    """Returns 3d then 8d
+
+    None goes to default url
+    
+    This url : 'http://131.215.2.28:8501/v1/models/dspace_embed/versions/6:predict'
+    host = '131.215.2.28:8501'
+    ver = 6
+    model = 'models/dspace_embed'
+
     """
     seq_arr = prepare_batch(seqs)
 
@@ -41,6 +48,10 @@ def infer_batch(seqs, tfserver='http://131.215.2.28:8501/v1/models/dspace_embed:
             "input_seq_batch": seq_arr
         }
     }
+    if ver is None:
+        tfserver='http://{h}/v1/{m}:predict'.format(h=host, m=model)
+    else:
+        tfserver='http://{h}/v1/{m}/versions/{v}:predict'.format(h=host, m=model, v=ver)
     r = requests.post(tfserver, json=payload)
     pred = json.loads(r.content.decode('utf-8'))
     pred = pred['outputs']

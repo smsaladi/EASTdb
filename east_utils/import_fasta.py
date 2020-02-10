@@ -75,14 +75,14 @@ def format_postgres(ids, seqs, embed_3d, embed_8d, prefix):
 
     return
 
-def import_fasta(fasta_file):
+def import_fasta(fasta_file, *args, **kwargs):
     seqiter = read_sequences(fasta_file)
 
     prefix = fasta_file.replace('.fasta.gz', '') 
 
     for batch in grouper(seqiter):
         ids, seqs = zip(*batch)
-        embed_3d, embed_8d = infer_batch(seqs)
+        embed_3d, embed_8d = infer_batch(seqs, *args, **kwargs)
         format_postgres(ids, seqs, embed_3d, embed_8d, prefix)
     
     print("CSV file created. COPY to database, and don't forget to create the index!")

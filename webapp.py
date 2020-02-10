@@ -41,6 +41,12 @@ app.config['DEBUG'] = os.environ.get('DEBUG', 0)
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 csrf = CSRFProtect(app)
 
+# tensorflow serving configuration
+app.config['tf_host'] = os.environ['TF_HOST'] # '131.215.2.28:8501'
+app.config['tf_model'] = 'models/dspace_embed'
+app.config['tf_ver'] = os.environ.get('TF_VER', 7)
+
+
 @app.route('/')
 def home():
     """Renders the website with current results
@@ -71,9 +77,9 @@ def query_sequence():
         )
     hitcount = data['messages']['hitcount']
     lookup_dim = data['messages']['dim']
-
+    ver = data['messages'].get('version', app.config['tf_ver'])
+    
     collection = data['collection']
-
     try:
         seqs = [s['seq'] for s in collection]
     except:
@@ -83,7 +89,10 @@ def query_sequence():
     
     # request looks ok, now calculate embeddings
     print("looking up embedding")
-    embed_3d, embed_8d = east_utils.infer_batch(seqs)
+    embed_3d, embed_8d = east_utils.infer_batch(seqs,
+            host=app.config['tf_host'],
+            model=app.config['tf_model'],
+            ver=ver)
 
     for i, _ in enumerate(collection):
         [collection[i].pop(k)
@@ -159,7 +168,10 @@ def format_error(msg):
 @click.argument('fasta_file')
 def import_fasta(fasta_file):
     """To import data into the database"""
-    east_utils.import_fasta(fasta_file)
+    east_utils.import_fasta(fasta_file,
+            host=app.config['tf_host'],
+            model=app.config['tf_model'],
+            ver=app.config['tf_ver'])
     return
 
 if __name__ == "__main__":
