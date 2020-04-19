@@ -1,6 +1,6 @@
 --
 --
--- Creates `index`es on the necessary columns
+-- Sets up tables in Postgres
 -- PGPASSWORD=psqlpass psql -d eastdb -U postgres -p 5433 -h 192.168.157.69 -vdir="/home/saladi/github/eastdb" < setup_table.sql
 -- 
 --
