@@ -6,9 +6,12 @@
 --
 
 
--- Simple hash index on the id
-CREATE INDEX IF NOT EXISTS Uniref50_id_hash_idx ON Uniref50 USING hash(id);
-CREATE INDEX IF NOT EXISTS Uniref50_seq_id_hash_idx ON Uniref50_seq USING hash(id);
+-- Simple index on the id
+-- hash vs B-tree
+-- https://dba.stackexchange.com/a/212706/137071
+-- https://stackoverflow.com/a/38168395/2320823
+CREATE INDEX IF NOT EXISTS Uniref50_id_hash_idx ON Uniref50 (id);
+CREATE INDEX IF NOT EXISTS Uniref50_seq_id_hash_idx ON Uniref50_seq (id);
 
 -- Create gist index on each
 -- GIN doesn't work since it doesnt support `<->` comparison op
