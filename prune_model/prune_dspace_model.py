@@ -7,16 +7,15 @@ not necessary for solely inferring the embedding for a given protein sequence
 """
 import argparse
 
-from keras.models import Model
-
-import sgidspace.sgikeras.models
+import tensorflow as tf
+from tensorflow.keras.models import Model
 from sgidspace.sgikeras.metrics import precision, recall, fmeasure
 
 import kerassurgeon
 # from kerassurgeon.operations import delete_layer
 
 def load_model(fn):
-    model = sgidspace.sgikeras.models.load_model(fn,
+    model = tf.keras.models.load_model(fn,
               custom_objects={'precision': precision,
                               'recall': recall,
                               'fmeasure': fmeasure})
