@@ -68,7 +68,7 @@ def query_sequence():
         return format_error(
             "Request doesn't look like it's JSON-formatted. Check the sample request."
         )
-    
+
     data = req.get_json()
 
     if 'collection' not in data.keys():
@@ -78,7 +78,7 @@ def query_sequence():
     hitcount = data['messages']['hitcount']
     lookup_dim = data['messages']['dim']
     ver = data['messages'].get('version', app.config['tf_ver'])
-    
+
     collection = data['collection']
     try:
         seqs = [s['seq'] for s in collection]
@@ -86,7 +86,7 @@ def query_sequence():
         return format_error(
             "Each member of `collection` requires a `seq` attribute. Check the sample request."
         )
-    
+
     # request looks ok, now calculate embeddings
     print("looking up embedding")
     embed_3d, embed_8d = east_utils.infer_batch(seqs,
@@ -98,7 +98,7 @@ def query_sequence():
         [collection[i].pop(k)
             for k in collection[i].keys()
                 if k not in ['seq', 'id']]
-                
+
         collection[i]['3d'] = embed_3d[i]
         collection[i]['8d'] = embed_8d[i]
 
@@ -110,7 +110,7 @@ def query_sequence():
             df_hits = lookup_embedding(embed_8d[i], hitcount)
         print(df_hits)
         collection[i]['hits'] = df_hits.to_dict(orient='records')
-        
+
     return format_response(data['messages'], collection)
 
 query_template = """
@@ -166,9 +166,11 @@ def format_error(msg):
 
 @app.cli.command("import")
 @click.argument('fasta_file')
-def import_fasta(fasta_file):
+@click.option('--batch_size', default=128)
+def import_fasta(fasta_file, batch_size):
     """To import data into the database"""
     east_utils.import_fasta(fasta_file,
+            batch_size=batch_size,
             host=app.config['tf_host'],
             model=app.config['tf_model'],
             ver=app.config['tf_ver'])
@@ -176,3 +178,4 @@ def import_fasta(fasta_file):
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True, use_reloader=True)
+

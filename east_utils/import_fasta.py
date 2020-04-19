@@ -1,7 +1,7 @@
 """
 Reads in a FASTA file and provides the embedding for each sequence
 
-For example: 
+For example:
 python embed_fasta.py --wipe --table test sample.faa ~/Dropbox/Caltech/EAST_bigfiles/epoch3_pruned.hdf5
 
 """
@@ -37,7 +37,7 @@ def read_sequences(fn):
             seq = str(r.seq)
             yield rec_id, seq
 
-def grouper(iterable, size=64):
+def grouper(iterable, size):
     """Groups an iterable into size
     https://stackoverflow.com/a/8290514/2320823
     """
@@ -75,15 +75,15 @@ def format_postgres(ids, seqs, embed_3d, embed_8d, prefix):
 
     return
 
-def import_fasta(fasta_file, *args, **kwargs):
+def import_fasta(fasta_file, batch_size=64, *args, **kwargs):
     seqiter = read_sequences(fasta_file)
 
-    prefix = fasta_file.replace('.fasta.gz', '') 
+    prefix = fasta_file.replace('.fasta.gz', '')
 
-    for batch in grouper(seqiter):
+    for batch in grouper(seqiter, size=batch_size):
         ids, seqs = zip(*batch)
         embed_3d, embed_8d = infer_batch(seqs, *args, **kwargs)
         format_postgres(ids, seqs, embed_3d, embed_8d, prefix)
-    
+
     print("CSV file created. COPY to database, and don't forget to create the index!")
     return
