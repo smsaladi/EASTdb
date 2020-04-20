@@ -6,6 +6,8 @@ Makes a sample request
 import json
 
 import requests
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 
 import numpy as np
 
@@ -28,7 +30,7 @@ def infer_batch(seqs, host, model, ver=None):
     """Returns 3d then 8d
 
     None goes to default url
-    
+
     This url : 'http://131.215.2.28:8501/v1/models/dspace_embed/versions/6:predict'
     host = '131.215.2.28:8501'
     ver = 6
@@ -52,7 +54,15 @@ def infer_batch(seqs, host, model, ver=None):
         tfserver='http://{h}/v1/{m}:predict'.format(h=host, m=model)
     else:
         tfserver='http://{h}/v1/{m}/versions/{v}:predict'.format(h=host, m=model, v=ver)
-    r = requests.post(tfserver, json=payload)
+
+    # retry with requests: https://stackoverflow.com/a/35504626/2320823
+    s = requests.Session()
+    retries = Retry(total=5,
+                    backoff_factor=0.1,
+                    status_forcelist=[ 500, 502, 503, 504 ])
+    s.mount('http://', HTTPAdapter(max_retries=retries))
+    r = s.post(tfserver, json=payload, timeout=120)
+
     pred = json.loads(r.content.decode('utf-8'))
     pred = pred['outputs']
 
