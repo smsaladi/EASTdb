@@ -19,15 +19,39 @@ echo "TMPDIR: " $DBTMP
 cat $DB | parallel --pipe --recstart '>' -N1000000 "pigz -p 10 -c > $DBTMP/db.part.{#}.fasta.gz"
 echo -n "TIMING-Parts: " && date +%s
 
+## Start Tensorflow server
+
+# Build image with
+# singularity build tfserving.sif docker://tensorflow/serving:latest
+
+# Create tf_serving models
+# ls ~/sgidata/models_pruned/* | parallel -j20 "python prune_model/export_saved_model.py {} ~/sgidata/models_tfserving/{/.}"
+
 FREEPORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
-gunicorn -k gevent -w 20 --graceful-timeout 6000 --keep-alive 600 -b :$FREEPORT "fake_tfserver_app:create_app('${MODEL}')" &
 
-# Give model servers a moment to load
-sleep 10
+# if model path has colon, singularity chokes
+ln -s $MODEL $DBTMP/model
 
-TFSERVER_PID=$!
+# Set parallelism
+# https://sylabs.io/guides/3.0/user-guide/environment_and_metadata.html#environment
+SINGULARITYENV_OMP_NUM_THREADS=30
+SINGULARITYENV_TENSORFLOW_INTER_OP_PARALLELISM=2
+SINGULARITYENV_TENSORFLOW_INTRA_OP_PARALLELISM=30
+
+singularity run \
+    --net --network=none \
+    --network-args "portmap=${FREEPORT}:8501/tcp" \
+    -B "model/:/models/model/1" \
+    tfserving.sif &> $DBTMP/tfserver.log.txt
+
+# Wait until server has loaded
+# https://superuser.com/a/375331/470760
+until cat $DBTMP/tfserver.log.txt | grep -m 1 "Entering the event loop"; do sleep 0.2 ; done
+
 
 export TF_HOST="127.0.0.1:$FREEPORT" 
+export TF_MODEL="models/model"
+export TF_VER=1
 export BASE_URL=""
 export SQLALCHEMY_DATABASE_URI=""
 export SECRET_KEY=""
@@ -35,7 +59,6 @@ ls $DBTMP/*.fasta.gz | parallel --retries 10 -j20 --load 100% --joblog ${DBSAVE}
 echo -n "TIMING-EMBED: " && date +%s
 
 rm $DBTMP/*.fasta.gz
-kill $TFSERVER_PID
 
 # Create and write to postgres database
 PGDB=`basename $DB .fasta`
@@ -69,4 +92,6 @@ pg_ctl -D $DBTMP/db -w stop
 
 cp -r $DBTMP/db $DBSAVE
 echo -n "TIMING-END: " && date +%s
+
+jobs -l | awk '{print $3}' | parallel kill
 

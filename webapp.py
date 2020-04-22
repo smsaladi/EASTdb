@@ -43,7 +43,7 @@ csrf = CSRFProtect(app)
 
 # tensorflow serving configuration
 app.config['tf_host'] = os.environ['TF_HOST'] # '131.215.2.28:8501'
-app.config['tf_model'] = 'models/dspace_embed'
+app.config['tf_model'] = os.environ.get('TF_MODEL', 'models/dspace_embed')
 app.config['tf_ver'] = os.environ.get('TF_VER', 7)
 
 
