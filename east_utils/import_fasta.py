@@ -6,6 +6,8 @@ python embed_fasta.py --wipe --table test sample.faa ~/Dropbox/Caltech/EAST_bigf
 
 """
 
+import os
+import os.path
 import functools
 from itertools import islice, chain
 import gzip
@@ -79,6 +81,12 @@ def import_fasta(fasta_file, batch_size=64, *args, **kwargs):
     seqiter = read_sequences(fasta_file)
 
     prefix = fasta_file.replace('.fasta.gz', '')
+    
+    # clear any output files (since we are appending...)
+    if os.path.exists(prefix + ".embed.csv"):
+        os.unlink(prefix + ".embed.csv")
+    if os.path.exists(prefix + ".seq.csv"):
+        os.unlink(prefix + ".seq.csv")
 
     for batch in grouper(seqiter, size=batch_size):
         ids, seqs = zip(*batch)
