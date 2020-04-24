@@ -47,7 +47,7 @@ def infer_batch(seqs, host, model, ver=None):
     # send data to tf server
     payload = {
         "inputs": {
-            "input_seq_batch": seq_arr
+            "sequence_input": seq_arr
         }
     }
     if ver is None:
@@ -63,8 +63,9 @@ def infer_batch(seqs, host, model, ver=None):
     s.mount('http://', HTTPAdapter(max_retries=retries))
     r = s.post(tfserver, json=payload, timeout=120)
 
-    pred = json.loads(r.content.decode('utf-8'))
+    pred = r.content.decode('utf-8')
+    pred = json.loads(pred)
     pred = pred['outputs']
-
-    return pred['eauto3d/batchnorm/add_1:0'], pred['embed_auto_bn4/batchnorm/add_1:0']
+    
+    return pred['eauto3d'], pred['embed_auto_bn4']
 
