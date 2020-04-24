@@ -1,0 +1,91 @@
+#!/bin/bash -ex
+#SBATCH --job-name=east_bench
+#SBATCH --output="slurm_bench.%j.%N.out"
+#SBATCH --partition=large-shared
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=64
+#SBATCH --export=ALL
+#SBATCH -t 24:00:00
+#SBATCH -A TG-MCB200019
+
+# MUST BE PROVIDED AS ENV VAR
+if [ -z "${MODEL}" ]; then 
+    echo "ERR: Must set MODEL"
+    exit
+fi
+
+echo MODEL: ${MODEL}
+MODELNAME=`basename $MODEL`
+
+source ~/apps/anaconda3/etc/profile.d/conda.sh
+conda activate flask
+module load use.own mine parallel singularity postgres
+
+LUSTRE=/oasis/scratch/comet/$USER/temp_project
+SCRATCH=/scratch/$USER/$SLURM_JOBID
+
+BENCHDIR=$LUSTRE/mmseqs2-benchmark-pub
+OUTDIR=$LUSTRE/sgidata/modeldb/${MODELNAME}
+mkdir -p ${OUTDIR}
+
+## Start Tensorflow server
+
+# Can create models for tf_serving as follows:
+# ls ~/sgidata/models_pruned/* | parallel -j20 "python prune_model/export_saved_model.py {} ~/sgidata/models_tfserving/{/.}"
+
+# Find a free port
+FREEPORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
+
+# if model path has colon, singularity chokes
+ln -s $MODEL $SCRATCH/model
+
+# Set parallelism
+# https://sylabs.io/guides/3.0/user-guide/environment_and_metadata.html#environment
+SINGULARITYENV_OMP_NUM_THREADS=30
+SINGULARITYENV_TENSORFLOW_INTER_OP_PARALLELISM=4
+SINGULARITYENV_TENSORFLOW_INTRA_OP_PARALLELISM=60
+
+singularity run \
+    -B "$SCRATCH/model/:/models/model/1" \
+    docker://tensorflow/serving:latest --rest_api_port=$FREEPORT 2>&1 | tee $SCRATCH/tfserver.log.txt &
+TFSERVER_PID=$!
+sleep 3 
+
+# Wait until server has loaded
+# https://superuser.com/a/375331/470760
+until cat $SCRATCH/tfserver.log.txt | grep -m 1 "Entering the event loop"; do sleep 0.2 ; done
+
+## Build database
+TEMPDB=$SCRATCH/modeldb
+cp -r ${OUTDIR} ${TEMPDB}
+
+# So EASTdb knows where to find the tfserver
+export TF_HOST="127.0.0.1:$FREEPORT"
+export TF_MODEL="models/model"
+export TF_VER=1
+echo $TF_HOST $TF_MODEL $TF_VER
+
+time ./createdb.sh $BENCHDIR/db/query.fasta ${TEMPDB}
+time ./createdb.sh $BENCHDIR/db/targetdb.fasta ${TEMPDB}
+
+cd ${TEMPDB}
+
+# Avoid overloading network drive, zip up postgres, compress csvs
+tar cf ${OUTDIR}/postgresdb.tar db
+ls *.csv | parallel -j10"pigz -p10 {}" 
+
+rm -r db
+cp ./* ${OUTDIR}
+ 
+# Kill tf server
+kill $TFSERVER_PID
+
+## for a set of models
+# ls $HOME/sgidata/models_pruned/* | parallel --delay 10 "./createdb.sh mmseqs2-benchmark-pub/db/query.fasta {}  ~/sgidata/modeldb/{/.} &> create_query.{/.}.log.txt"
+
+
+# Calling one off
+# MODEL=~/lustre/sgidata/models_tfserving/model.run-2020-03-13_00\:30\:29.01 ./create_eastdb.sb &
+
+# ls -d ~/lustre/sgidata/models_tfserving/* | head -n3 | parallel "sbatch --export=MODEL={} create_eastdb.sb"
+
