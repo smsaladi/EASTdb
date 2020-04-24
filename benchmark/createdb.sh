@@ -13,16 +13,16 @@ cat $FASTA | \
     "pigz -p 10 -c > $OUT/${PGDB}.part.{#}.fasta.gz"
 echo "TIMING-Parts: `date +%s`"
 
-
 # Create and write to postgres database
 
 # Create database if doesn't exist
 if [ ! -d "${OUT}/db" ]; then
     initdb -D $OUT/db --auth-local="trust"
-    cp postgresql.conf $OUT/db/
-    echo "unix_socket_directories = '$OUT/db'" >> $OUT/db/postgresql.conf
     mkdir $OUT/db/conf.d
 fi
+
+cp postgresql.conf $OUT/db/
+echo "unix_socket_directories = '$OUT/db'" >> $OUT/db/postgresql.conf
 
 pg_ctl -D $OUT/db -w start
 createdb --host=$OUT/db $PGDB || true
