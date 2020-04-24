@@ -72,7 +72,7 @@ cd ${TEMPDB}
 
 # Avoid overloading network drive, zip up postgres, compress csvs
 tar cf ${OUTDIR}/postgresdb.tar db
-ls *.csv | parallel -j10"pigz -p10 {}" 
+ls *.csv | parallel -j10 "pigz -p10 {}" 
 
 rm -r db
 cp ./* ${OUTDIR}
