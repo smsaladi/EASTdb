@@ -17,6 +17,7 @@ fi
 echo MODEL: ${MODEL}
 MODELNAME=`basename $MODEL`
 
+source /etc/profile.d/modules.sh
 source ~/apps/anaconda3/etc/profile.d/conda.sh
 conda activate flask
 module load use.own mine parallel singularity postgres
