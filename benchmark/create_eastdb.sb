@@ -28,6 +28,7 @@ SCRATCH=/scratch/$USER/$SLURM_JOBID
 BENCHDIR=$LUSTRE/mmseqs2-benchmark-pub
 OUTDIR=$LUSTRE/sgidata/modeldb/${MODELNAME}
 mkdir -p ${OUTDIR}
+mkdir -p ${SCRATCH}
 
 ## Start Tensorflow server
 
