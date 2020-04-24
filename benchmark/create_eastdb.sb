@@ -39,6 +39,7 @@ mkdir -p ${SCRATCH}
 FREEPORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
 
 # if model path has colon, singularity chokes
+rm $SCRATCH/model || true
 ln -s $MODEL $SCRATCH/model
 
 # Set parallelism
