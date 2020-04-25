@@ -8,7 +8,7 @@ echo "TIMING-ENDEMBED: $PREFIX : `date +%s`"
 
 rm $OUT/$PREFIX.fasta.gz
 
-psql --host=$OUT/db --dbname=$PGDB --command <<EOF
+psql --host=$OUT/db --dbname=$PGDB <<EOF
     \copy Uniref50 from ${PREFIX}.embed.csv CSV;
     \copy Uniref50_Seq from ${PREFIX}.seq.csv CSV;
 EOF
