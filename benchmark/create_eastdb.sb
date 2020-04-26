@@ -36,7 +36,7 @@ mkdir -p ${SCRATCH}
 # ls ~/sgidata/models_pruned/* | parallel -j20 "python prune_model/export_saved_model.py {} ~/sgidata/models_tfserving/{/.}"
 
 # Find a free port
-FREEPORT=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')
+FREEPORT=`./freeport`
 
 # if model path has colon, singularity chokes
 rm $SCRATCH/model || true
