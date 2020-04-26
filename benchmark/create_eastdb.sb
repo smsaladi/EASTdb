@@ -74,8 +74,8 @@ time ./createdb.sh $BENCHDIR/db/targetdb.fasta ${TEMPDB}
 cd ${TEMPDB}
 
 # Avoid overloading network drive, zip up postgres, compress csvs
-tar cf ${OUTDIR}/postgresdb.tar db
-ls *.csv | parallel -j10 "pigz -p10 {}" 
+tar --use-compress-program=pigz cf ${OUTDIR}/postgresdb.tar.gz db
+ls *.csv | parallel -j10 "pigz -f -p10 {}" 
 
 rm -r db
 cp ./* ${OUTDIR}
